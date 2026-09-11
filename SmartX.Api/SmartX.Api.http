@@ -1,0 +1,157 @@
+@SmartX.Api_HostAddress = http://localhost:5088
+
+GET {{SmartX.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+###
+
+POST https://localhost:44386/api/telemetry/temperature
+Content-Type: application/json
+
+{
+  "deviceId": "TEMP-001",
+  "timestamp": "2026-09-11T12:00:00Z",
+  "dataType": "float",
+  "value": 24.6,
+  "unit": "°C"
+}
+
+###
+
+POST https://localhost:44386/api/telemetry/power
+Content-Type: application/json
+
+{
+  "deviceId": "POWER-001",
+  "timestamp": "2026-09-11T12:02:00Z",
+  "dataType": "int",
+  "value": 1250,
+  "unit": "W"
+}
+
+###
+
+POST https://localhost:44386/api/telemetry/power
+Content-Type: application/json
+
+{
+  "deviceId": "POWER-001",
+  "timestamp": "2026-09-11T12:03:00Z",
+  "dataType": "int",
+  "value": 7000,
+  "unit": "W"
+}
+
+###
+
+POST https://localhost:44386/api/telemetry/switch
+Content-Type: application/json
+
+{
+  "deviceId": "ACT-001",
+  "timestamp": "2026-09-11T12:04:00Z",
+  "dataType": "bool",
+  "value": true,
+  "unit": "Boolean"
+}
+
+###
+
+POST https://localhost:44386/api/telemetry/temperature
+Content-Type: application/json
+
+{
+  "deviceId": "TEMP-001",
+  "timestamp": "2026-09-11T12:00:00Z",
+  "dataType": "float",
+  "value": 24.6,
+  "unit": "°C"
+}
+
+
+###
+
+  POST https://localhost:44386/api/telemetry/temperature
+Content-Type: application/json
+
+{
+  "deviceId": "TEMP-001",
+  "timestamp": "2026-09-11T12:01:00Z",
+  "dataType": "float",
+  "value": 25.1,
+  "unit": "°C"
+}
+
+###
+
+  POST https://localhost:44386/api/telemetry/temperature
+Content-Type: application/json
+
+{
+  "deviceId": "TEMP-001",
+  "timestamp": "2026-09-11T12:02:00Z",
+  "dataType": "float",
+  "value": 75.5,
+  "unit": "°C"
+}
+
+###
+
+POST https://localhost:44386/api/telemetry/validate-deployment
+Content-Type: application/json
+
+{
+  "nodeId": "FAC-001",
+  "name": "Smart-X Facility",
+  "nodeType": "Facility",
+  "children": [
+    {
+      "nodeId": "ZONE-A",
+      "name": "Zone A",
+      "nodeType": "Zone",
+      "children": [
+        {
+          "nodeId": "ROOM-101",
+          "name": "Room 101",
+          "nodeType": "Room",
+          "children": [
+            {
+              "nodeId": "TEMP-001",
+              "name": "Temperature Sensor",
+              "nodeType": "Sensor",
+              "children": []
+            },
+            {
+              "nodeId": "POWER-001",
+              "name": "Power Sensor",
+              "nodeType": "Sensor",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nodeId": "ZONE-B",
+      "name": "Zone B",
+      "nodeType": "Zone",
+      "children": [
+        {
+          "nodeId": "ROOM-201",
+          "name": "Room 201",
+          "nodeType": "Room",
+          "children": [
+            {
+              "nodeId": "ACT-001",
+              "name": "Smart Actuator",
+              "nodeType": "Sensor",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
