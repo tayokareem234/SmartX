@@ -16,6 +16,10 @@ namespace SmartX.Client.Services
             };
         }
 
+        // =====================================================
+        // SENSOR MANAGEMENT
+        // =====================================================
+
         public async Task<List<Sensor>> GetSensorsAsync()
         {
             HttpResponseMessage response =
@@ -29,6 +33,31 @@ namespace SmartX.Client.Services
 
             return sensors ?? new List<Sensor>();
         }
+
+        public async Task<Sensor?> RegisterSensorAsync(
+            Sensor sensor)
+        {
+            HttpResponseMessage response =
+                await _httpClient.PostAsJsonAsync(
+                    "sensors",
+                    sensor);
+
+            if (response.StatusCode ==
+                System.Net.HttpStatusCode.Conflict)
+            {
+                throw new InvalidOperationException(
+                    "A sensor with this unique identifier already exists.");
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content
+                .ReadFromJsonAsync<Sensor>();
+        }
+
+        // =====================================================
+        // TELEMETRY
+        // =====================================================
 
         public async Task<TelemetryRecord?> SendTemperatureAsync(
             TelemetryPacket<float> packet)
@@ -87,49 +116,12 @@ namespace SmartX.Client.Services
             return telemetry ?? new List<TelemetryRecord>();
         }
 
-        public async Task<SensorAttachment?> UploadAttachmentAsync(
-                string deviceId,
-                string filePath,
-                string attachmentType)
-        {
-            await using FileStream fileStream =
-                new FileStream(
-                    filePath,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.Read);
+        // =====================================================
+        // SENSOR DISCONNECT SIMULATION
+        // =====================================================
 
-            using MultipartFormDataContent form =
-                new MultipartFormDataContent();
-
-            using StreamContent fileContent =
-                new StreamContent(fileStream);
-
-            fileContent.Headers.ContentType =
-                new System.Net.Http.Headers.MediaTypeHeaderValue(
-                    "application/octet-stream");
-
-            form.Add(
-                fileContent,
-                "file",
-                Path.GetFileName(filePath));
-
-            form.Add(
-                new StringContent(attachmentType),
-                "attachmentType");
-
-            HttpResponseMessage response =
-                await _httpClient.PostAsync(
-                    $"sensors/{deviceId}/attachments",
-                    form);
-
-            response.EnsureSuccessStatusCode();
-
-            return await response.Content
-                .ReadFromJsonAsync<SensorAttachment>();
-        }
-
-        public async Task<bool> SimulateDisconnectAsync(string deviceId)
+        public async Task SimulateDisconnectAsync(
+            string deviceId)
         {
             HttpResponseMessage response =
                 await _httpClient.PostAsync(
@@ -137,8 +129,52 @@ namespace SmartX.Client.Services
                     null);
 
             response.EnsureSuccessStatusCode();
+        }
 
-            return true;
+        // =====================================================
+        // SENSOR FILE ATTACHMENTS
+        // =====================================================
+
+        public async Task<SensorAttachment?>
+            UploadAttachmentAsync(
+                string deviceId,
+                string filePath,
+                string attachmentType)
+        {
+            using MultipartFormDataContent content =
+                new MultipartFormDataContent();
+
+            StringContent attachmentTypeContent =
+                new StringContent(attachmentType);
+
+            content.Add(
+                attachmentTypeContent,
+                "attachmentType");
+
+            await using FileStream fileStream =
+                File.OpenRead(filePath);
+
+            StreamContent fileContent =
+                new StreamContent(fileStream);
+
+            fileContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    "application/octet-stream");
+
+            content.Add(
+                fileContent,
+                "file",
+                Path.GetFileName(filePath));
+
+            HttpResponseMessage response =
+                await _httpClient.PostAsync(
+                   $"sensors/{deviceId}/attachments",
+                    content);
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content
+                .ReadFromJsonAsync<SensorAttachment>();
         }
     }
 }
