@@ -32,35 +32,38 @@ namespace SmartX.Client
             MinimumSize = new Size(900, 600);
 
             BackColor = Color.FromArgb(245, 247, 250);
-
             Panel header = new Panel
             {
-                Dock = DockStyle.Top,
-                Height = 100,
-                BackColor = Color.FromArgb(30, 41, 59)
+                Location = new Point(0, 0),
+                Width = ClientSize.Width,
+                Height = 105,
+                BackColor = Color.FromArgb(30, 41, 59),
+                Anchor = AnchorStyles.Top |
+                         AnchorStyles.Left |
+                         AnchorStyles.Right
             };
 
             Label title = new Label
             {
-                Text = "SMART-X",
+                Text = "SMART-X TELEMETRY",
                 ForeColor = Color.White,
                 Font = new Font(
                     "Segoe UI",
-                    26,
+                    24,
                     FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(35, 18)
+                Location = new Point(30, 15)
             };
 
             Label subtitle = new Label
             {
-                Text = "IoT Data Ingestion and Telemetry Gateway",
+                Text = "Real-Time Sensor Data Ingestion and Monitoring",
                 ForeColor = Color.LightGray,
                 Font = new Font(
                     "Segoe UI",
-                    11),
+                    10),
                 AutoSize = true,
-                Location = new Point(38, 60)
+                Location = new Point(32, 60)
             };
 
             header.Controls.Add(title);

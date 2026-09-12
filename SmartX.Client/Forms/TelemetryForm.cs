@@ -13,6 +13,7 @@ namespace SmartX.Client.Forms
         private Label _actuatorValue = null!;
         private Label _alertLabel = null!;
         private ListBox _telemetryList = null!;
+        private List<TelemetryRecord> _allTelemetryRecords = new();
 
         private Button _normalTemperatureButton = null!;
         private Button _anomalyTemperatureButton = null!;
@@ -23,6 +24,7 @@ namespace SmartX.Client.Forms
         private ComboBox _sensorSelector = null!;
         private ComboBox _attachmentTypeSelector = null!;
         private Button _attachFileButton = null!;
+        private ComboBox _telemetryFilter = null!;
 
         public TelemetryForm()
         {
@@ -53,14 +55,21 @@ namespace SmartX.Client.Forms
 
         private void BuildDashboard()
         {
+            Controls.Clear();
+
+            SuspendLayout();
+
             Text = "Smart-X | Telemetry Dashboard";
+
+            AutoScaleMode = AutoScaleMode.Dpi;
+
 
             StartPosition = FormStartPosition.CenterScreen;
 
             Width = 1200;
-            Height = 750;
+            Height = 800;
 
-            MinimumSize = new Size(1000, 650);
+            MinimumSize = new Size(1000, 700);
 
             BackColor = Color.FromArgb(245, 247, 250);
 
@@ -380,31 +389,69 @@ namespace SmartX.Client.Forms
                     16,
                     FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(30, 520)
+                Location = new Point(30, 570)
             };
 
+            Label filterLabel = new Label
+            {
+                Text = "Filter:",
+                Font = new Font(
+                    "Segoe UI",
+                    10,
+                    FontStyle.Bold),
+                AutoSize = true,
+                Location = new Point(800, 570)
+            };
+
+            _telemetryFilter = new ComboBox
+            {
+                Location = new Point(870, 570),
+                Width = 255,
+                Height = 30,
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+
+            _telemetryFilter.Items.AddRange(
+                new object[]
+                {
+        "Show All",
+        "Normal Only",
+        "Anomalies Only"
+                });
+
+            _telemetryFilter.SelectedIndex = 0;
+
+            _telemetryFilter.SelectedIndexChanged +=
+                TelemetryFilter_SelectedIndexChanged;
+
             Controls.Add(historyTitle);
+            Controls.Add(filterLabel);
+            Controls.Add(_telemetryFilter);
 
             _telemetryList = new ListBox
             {
-                Location = new Point(30, 580),
+                Location = new Point(30, 615),
                 Width = 1120,
-                Height = 120,
+                Height = 105,
                 Font = new Font(
-                    "Consolas",
-                    10),
+         "Consolas",
+         10),
                 DrawMode = DrawMode.OwnerDrawFixed,
                 ItemHeight = 24,
                 Anchor =
-                    AnchorStyles.Top |
-                    AnchorStyles.Left |
-                    AnchorStyles.Right |
-                    AnchorStyles.Bottom
+         AnchorStyles.Top |
+         AnchorStyles.Left |
+         AnchorStyles.Right |
+         AnchorStyles.Bottom
             };
 
-            _telemetryList.DrawItem += TelemetryList_DrawItem;
+            _telemetryList.DrawItem +=
+      TelemetryList_DrawItem;
 
             Controls.Add(_telemetryList);
+
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         private Panel CreateSensorCard(
@@ -503,11 +550,51 @@ namespace SmartX.Client.Forms
         }
 
         private void DisplayTelemetry(
-            List<TelemetryRecord> records)
+    List<TelemetryRecord> records)
         {
+            _allTelemetryRecords = records;
+
+            ApplyTelemetryFilter();
+        }
+
+        private void TelemetryFilter_SelectedIndexChanged(
+    object? sender,
+    EventArgs e)
+        {
+            ApplyTelemetryFilter();
+        }
+
+        private void ApplyTelemetryFilter()
+        {
+            if (_telemetryList == null)
+            {
+                return;
+            }
+
+            string selectedFilter =
+                _telemetryFilter?.SelectedItem?.ToString()
+                ?? "Show All";
+
+            IEnumerable<TelemetryRecord> filteredRecords =
+                _allTelemetryRecords;
+
+            if (selectedFilter == "Normal Only")
+            {
+                filteredRecords =
+                    _allTelemetryRecords.Where(
+                        r => !r.IsAnomaly &&
+                             !r.IsDisconnected);
+            }
+            else if (selectedFilter == "Anomalies Only")
+            {
+                filteredRecords =
+                    _allTelemetryRecords.Where(
+                        r => r.IsAnomaly);
+            }
+
             _telemetryList.Items.Clear();
 
-            foreach (TelemetryRecord record in records)
+            foreach (TelemetryRecord record in filteredRecords)
             {
                 _telemetryList.Items.Add(record);
             }
@@ -558,11 +645,11 @@ namespace SmartX.Client.Forms
                 new SolidBrush(textColor);
 
             e.Graphics.DrawString(
-                displayText,
-                e.Font,
-                textBrush,
-                e.Bounds.Left + 4,
-                e.Bounds.Top + 4);
+     displayText,
+     e.Font ?? _telemetryList.Font,
+     textBrush,
+     e.Bounds.Left + 4,
+     e.Bounds.Top + 4);
 
             e.DrawFocusRectangle();
         }
