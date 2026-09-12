@@ -155,3 +155,22 @@ Content-Type: application/json
     }
   ]
 }
+
+###
+
+POST https://localhost:44386/api/sensors/TEMP-001/attachments
+Content-Type: multipart/form-data; boundary=SmartXBoundary
+
+--SmartXBoundary
+Content-Disposition: form-data; name="attachmentType"
+
+Hardware Log
+--SmartXBoundary
+Content-Disposition: form-data; name="file"; filename="TEMP-001-log.txt"
+Content-Type: text/plain
+
+< C:\Users\emeris\Desktop\TEMP-001-log.txt
+--SmartXBoundary--
+###
+
+POST https://localhost:44386/api/sensors/ACT-001/disconnect

@@ -8,6 +8,8 @@ namespace SmartX.Api.Services
 
         public List<TelemetryRecord> TelemetryRecords { get; } = new();
 
+        public List<SensorAttachment> Attachments { get; } = new();
+
         public SmartXDataStore()
         {
             SeedSensors();
@@ -53,6 +55,36 @@ namespace SmartX.Api.Services
                 LastCommunication = DateTime.UtcNow.AddMinutes(-10),
                 Status = "Disconnected"
             });
+        }
+
+        public int GetNextAttachmentId()
+        {
+            return Attachments.Count == 0
+                ? 1
+                : Attachments.Max(a => a.Id) + 1;
+        }
+
+        public void AddAttachment(SensorAttachment attachment)
+        {
+            Attachments.Add(attachment);
+        }
+
+        public bool SetSensorDisconnected(string deviceId)
+        {
+            Sensor? sensor = Sensors.FirstOrDefault(s =>
+                s.UniqueIdentifier.Equals(
+                    deviceId,
+                    StringComparison.OrdinalIgnoreCase));
+
+            if (sensor == null)
+            {
+                return false;
+            }
+
+            sensor.IsConnected = false;
+            sensor.Status = "Disconnected";
+
+            return true;
         }
     }
 }

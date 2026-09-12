@@ -12,6 +12,8 @@ builder.Services.AddSingleton<TelemetryProcessingService>();
 
 builder.Services.AddSingleton<DeploymentValidationService>();
 
+builder.Services.AddSingleton<EncryptedFileStorageService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

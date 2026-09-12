@@ -1,5 +1,7 @@
+using SmartX.Client.Forms;
 using SmartX.Client.Services;
 using SmartX.Shared.Models;
+
 
 namespace SmartX.Client
 {
@@ -280,16 +282,13 @@ namespace SmartX.Client
         }
 
         private void TelemetryButton_Click(
-            object? sender,
-            EventArgs e)
+    object? sender,
+    EventArgs e)
         {
-            MessageBox.Show(
-                "The Sensor Data Ingestion module is active.\n\n" +
-                "The telemetry dashboard will be opened in " +
-                "the next implementation stage.",
-                "Smart-X Telemetry",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            TelemetryForm telemetryForm =
+                new TelemetryForm();
+
+            telemetryForm.Show();
         }
     }
 }

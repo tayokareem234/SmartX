@@ -86,5 +86,59 @@ namespace SmartX.Client.Services
 
             return telemetry ?? new List<TelemetryRecord>();
         }
+
+        public async Task<SensorAttachment?> UploadAttachmentAsync(
+                string deviceId,
+                string filePath,
+                string attachmentType)
+        {
+            await using FileStream fileStream =
+                new FileStream(
+                    filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read);
+
+            using MultipartFormDataContent form =
+                new MultipartFormDataContent();
+
+            using StreamContent fileContent =
+                new StreamContent(fileStream);
+
+            fileContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    "application/octet-stream");
+
+            form.Add(
+                fileContent,
+                "file",
+                Path.GetFileName(filePath));
+
+            form.Add(
+                new StringContent(attachmentType),
+                "attachmentType");
+
+            HttpResponseMessage response =
+                await _httpClient.PostAsync(
+                    $"sensors/{deviceId}/attachments",
+                    form);
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content
+                .ReadFromJsonAsync<SensorAttachment>();
+        }
+
+        public async Task<bool> SimulateDisconnectAsync(string deviceId)
+        {
+            HttpResponseMessage response =
+                await _httpClient.PostAsync(
+                    $"sensors/{deviceId}/disconnect",
+                    null);
+
+            response.EnsureSuccessStatusCode();
+
+            return true;
+        }
     }
 }

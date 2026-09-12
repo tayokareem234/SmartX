@@ -141,5 +141,34 @@ namespace SmartX.Api.Controllers
 
             return NoContent();
         }
+
+        // POST: api/sensors/TEMP-001/disconnect
+        [HttpPost("{deviceId}/disconnect")]
+        public IActionResult SimulateDisconnect(string deviceId)
+        {
+            bool disconnected =
+                _dataStore.SetSensorDisconnected(deviceId);
+
+            if (!disconnected)
+            {
+                return NotFound(new
+                {
+                    message = $"Sensor '{deviceId}' was not found."
+                });
+            }
+
+            Sensor sensor = _dataStore.Sensors
+                .First(s => s.UniqueIdentifier.Equals(
+                    deviceId,
+                    StringComparison.OrdinalIgnoreCase));
+
+            return Ok(new
+            {
+                message = $"Sensor '{sensor.UniqueIdentifier}' is now disconnected.",
+                deviceId = sensor.UniqueIdentifier,
+                status = sensor.Status,
+                isConnected = sensor.IsConnected
+            });
+        }
     }
 }
