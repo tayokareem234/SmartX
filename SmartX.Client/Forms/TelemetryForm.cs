@@ -393,12 +393,16 @@ namespace SmartX.Client.Forms
                 Font = new Font(
                     "Consolas",
                     10),
+                DrawMode = DrawMode.OwnerDrawFixed,
+                ItemHeight = 24,
                 Anchor =
                     AnchorStyles.Top |
                     AnchorStyles.Left |
                     AnchorStyles.Right |
                     AnchorStyles.Bottom
             };
+
+            _telemetryList.DrawItem += TelemetryList_DrawItem;
 
             Controls.Add(_telemetryList);
         }
@@ -505,13 +509,62 @@ namespace SmartX.Client.Forms
 
             foreach (TelemetryRecord record in records)
             {
-                _telemetryList.Items.Add(
-                    $"{record.Timestamp:HH:mm:ss} | " +
-                    $"{record.DeviceId,-10} | " +
-                    $"{record.NumericValue,-10} | " +
-                    $"{record.Unit,-8} | " +
-                    $"{record.Status}");
+                _telemetryList.Items.Add(record);
             }
+
+            _telemetryList.Invalidate();
+        }
+
+        private void TelemetryList_DrawItem(
+            object? sender,
+            DrawItemEventArgs e)
+        {
+            if (e.Index < 0 ||
+                e.Index >= _telemetryList.Items.Count)
+            {
+                return;
+            }
+
+            if (_telemetryList.Items[e.Index]
+                is not TelemetryRecord record)
+            {
+                return;
+            }
+
+            e.DrawBackground();
+
+            Color textColor = Color.Black;
+            string statusText = record.Status;
+
+            if (record.IsAnomaly)
+            {
+                textColor = Color.DarkRed;
+                statusText = "⚠ ANOMALY";
+            }
+            else if (record.IsDisconnected)
+            {
+                textColor = Color.DarkOrange;
+                statusText = "⚠ DISCONNECTED";
+            }
+
+            string displayText =
+                $"{record.Timestamp:HH:mm:ss} | " +
+                $"{record.DeviceId,-10} | " +
+                $"{record.NumericValue,-10} | " +
+                $"{record.Unit,-8} | " +
+                $"{statusText}";
+
+            using Brush textBrush =
+                new SolidBrush(textColor);
+
+            e.Graphics.DrawString(
+                displayText,
+                e.Font,
+                textBrush,
+                e.Bounds.Left + 4,
+                e.Bounds.Top + 4);
+
+            e.DrawFocusRectangle();
         }
 
         private void UpdateSensorCards(
