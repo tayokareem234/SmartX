@@ -35,6 +35,22 @@ namespace SmartX.Client.Forms
             _ = LoadTelemetryAsync();
         }
 
+        private void PopulateSensorSelector(List<Sensor> sensors)
+        {
+            _sensorSelector.Items.Clear();
+
+            foreach (Sensor sensor in sensors)
+            {
+                _sensorSelector.Items.Add(
+                    sensor.UniqueIdentifier);
+            }
+
+            if (_sensorSelector.Items.Count > 0)
+            {
+                _sensorSelector.SelectedIndex = 0;
+            }
+        }
+
         private void BuildDashboard()
         {
             Text = "Smart-X | Telemetry Dashboard";
@@ -107,26 +123,25 @@ namespace SmartX.Client.Forms
                     Height = 150,
                     ColumnCount = 3,
                     RowCount = 1,
+                    ColumnStyles =
+                    {
+                        new ColumnStyle(
+                            SizeType.Percent,
+                            33.33f),
+
+                        new ColumnStyle(
+                            SizeType.Percent,
+                            33.33f),
+
+                        new ColumnStyle(
+                            SizeType.Percent,
+                            33.34f)
+                    },
                     Anchor =
                         AnchorStyles.Top |
                         AnchorStyles.Left |
                         AnchorStyles.Right
                 };
-
-            cards.ColumnStyles.Add(
-                new ColumnStyle(
-                    SizeType.Percent,
-                    33.33f));
-
-            cards.ColumnStyles.Add(
-                new ColumnStyle(
-                    SizeType.Percent,
-                    33.33f));
-
-            cards.ColumnStyles.Add(
-                new ColumnStyle(
-                    SizeType.Percent,
-                    33.34f));
 
             Panel temperatureCard =
                 CreateSensorCard(
@@ -263,11 +278,20 @@ namespace SmartX.Client.Forms
                 DisconnectButton_Click;
 
             simulationPanel.Controls.Add(simulationTitle);
-            simulationPanel.Controls.Add(_normalTemperatureButton);
-            simulationPanel.Controls.Add(_anomalyTemperatureButton);
-            simulationPanel.Controls.Add(_powerButton);
-            simulationPanel.Controls.Add(_switchButton);
-            simulationPanel.Controls.Add(_disconnectButton);
+            simulationPanel.Controls.Add(
+                _normalTemperatureButton);
+
+            simulationPanel.Controls.Add(
+                _anomalyTemperatureButton);
+
+            simulationPanel.Controls.Add(
+                _powerButton);
+
+            simulationPanel.Controls.Add(
+                _switchButton);
+
+            simulationPanel.Controls.Add(
+                _disconnectButton);
 
             Controls.Add(simulationPanel);
 
@@ -299,32 +323,26 @@ namespace SmartX.Client.Forms
                 Location = new Point(0, 30),
                 Width = 180,
                 Height = 30,
-                DropDownStyle = ComboBoxStyle.DropDownList
+                DropDownStyle =
+                    ComboBoxStyle.DropDownList
             };
-
-            _sensorSelector.Items.AddRange(new object[]
-            {
-                "TEMP-001",
-                "POWER-001",
-                "ACT-001"
-            });
-
-            _sensorSelector.SelectedIndex = 0;
 
             _attachmentTypeSelector = new ComboBox
             {
                 Location = new Point(190, 30),
                 Width = 180,
                 Height = 30,
-                DropDownStyle = ComboBoxStyle.DropDownList
+                DropDownStyle =
+                    ComboBoxStyle.DropDownList
             };
 
-            _attachmentTypeSelector.Items.AddRange(new object[]
-            {
-                "Hardware Log",
-                "Configuration",
-                "Deployment Photo"
-            });
+            _attachmentTypeSelector.Items.AddRange(
+                new object[]
+                {
+                    "Hardware Log",
+                    "Configuration",
+                    "Deployment Photo"
+                });
 
             _attachmentTypeSelector.SelectedIndex = 0;
 
@@ -339,10 +357,17 @@ namespace SmartX.Client.Forms
             _attachFileButton.Click +=
                 AttachFileButton_Click;
 
-            attachmentPanel.Controls.Add(attachmentTitle);
-            attachmentPanel.Controls.Add(_sensorSelector);
-            attachmentPanel.Controls.Add(_attachmentTypeSelector);
-            attachmentPanel.Controls.Add(_attachFileButton);
+            attachmentPanel.Controls.Add(
+                attachmentTitle);
+
+            attachmentPanel.Controls.Add(
+                _sensorSelector);
+
+            attachmentPanel.Controls.Add(
+                _attachmentTypeSelector);
+
+            attachmentPanel.Controls.Add(
+                _attachFileButton);
 
             Controls.Add(attachmentPanel);
 
@@ -441,6 +466,8 @@ namespace SmartX.Client.Forms
                 List<Sensor> sensors =
                     await _apiClient.GetSensorsAsync();
 
+                PopulateSensorSelector(sensors);
+
                 DisplayTelemetry(records);
 
                 _connectionStatus.Text =
@@ -510,27 +537,33 @@ namespace SmartX.Client.Forms
             if (temperature != null)
             {
                 _temperatureValue.Text =
-                    $"{temperature.NumericValue} {temperature.Unit}";
+                    $"{temperature.NumericValue} " +
+                    $"{temperature.Unit}";
             }
 
             if (power != null)
             {
                 _powerValue.Text =
-                    $"{power.NumericValue} {power.Unit}";
+                    $"{power.NumericValue} " +
+                    $"{power.Unit}";
             }
 
             if (actuatorSensor != null &&
                 !actuatorSensor.IsConnected)
             {
-                _actuatorValue.Text = "DISCONNECTED";
-                _actuatorValue.ForeColor = Color.DarkOrange;
+                _actuatorValue.Text =
+                    "DISCONNECTED";
+
+                _actuatorValue.ForeColor =
+                    Color.DarkOrange;
             }
             else if (actuator != null)
             {
                 _actuatorValue.Text =
                     actuator.NumericValue.ToString();
 
-                _actuatorValue.ForeColor = Color.Black;
+                _actuatorValue.ForeColor =
+                    Color.Black;
             }
 
             CheckForAlerts(
@@ -548,10 +581,12 @@ namespace SmartX.Client.Forms
             bool hasDisconnectedSensor =
                 sensors.Any(s => !s.IsConnected);
 
-            if (hasAnomaly && hasDisconnectedSensor)
+            if (hasAnomaly &&
+                hasDisconnectedSensor)
             {
                 _alertLabel.Text =
-                    "⚠ ALERT: Abnormal telemetry detected | Sensor disconnected";
+                    "⚠ ALERT: Abnormal telemetry detected | " +
+                    "Sensor disconnected";
 
                 _alertLabel.ForeColor =
                     Color.DarkRed;
@@ -575,7 +610,8 @@ namespace SmartX.Client.Forms
             else
             {
                 _alertLabel.Text =
-                    "SYSTEM STATUS: All telemetry readings normal";
+                    "SYSTEM STATUS: " +
+                    "All telemetry readings normal";
 
                 _alertLabel.ForeColor =
                     Color.DarkGreen;
@@ -595,7 +631,8 @@ namespace SmartX.Client.Forms
                         "float",
                         "°C");
 
-                await _apiClient.SendTemperatureAsync(packet);
+                await _apiClient.SendTemperatureAsync(
+                    packet);
 
                 await RefreshTelemetryAsync();
             }
@@ -618,7 +655,8 @@ namespace SmartX.Client.Forms
                         "float",
                         "°C");
 
-                await _apiClient.SendTemperatureAsync(packet);
+                await _apiClient.SendTemperatureAsync(
+                    packet);
 
                 await RefreshTelemetryAsync();
             }
@@ -641,7 +679,8 @@ namespace SmartX.Client.Forms
                         "int",
                         "W");
 
-                await _apiClient.SendPowerAsync(packet);
+                await _apiClient.SendPowerAsync(
+                    packet);
 
                 await RefreshTelemetryAsync();
             }
@@ -664,7 +703,8 @@ namespace SmartX.Client.Forms
                         "bool",
                         "state");
 
-                await _apiClient.SendSwitchAsync(packet);
+                await _apiClient.SendSwitchAsync(
+                    packet);
 
                 await RefreshTelemetryAsync();
             }
@@ -681,7 +721,8 @@ namespace SmartX.Client.Forms
             try
             {
                 _disconnectButton.Enabled = false;
-                _disconnectButton.Text = "Disconnecting...";
+                _disconnectButton.Text =
+                    "Disconnecting...";
 
                 await _apiClient.SimulateDisconnectAsync(
                     "ACT-001");
@@ -706,7 +747,8 @@ namespace SmartX.Client.Forms
             finally
             {
                 _disconnectButton.Enabled = true;
-                _disconnectButton.Text = "Simulate Disconnect";
+                _disconnectButton.Text =
+                    "Simulate Disconnect";
             }
         }
 
@@ -717,6 +759,8 @@ namespace SmartX.Client.Forms
 
             List<Sensor> sensors =
                 await _apiClient.GetSensorsAsync();
+
+            PopulateSensorSelector(sensors);
 
             DisplayTelemetry(records);
 
@@ -794,12 +838,14 @@ namespace SmartX.Client.Forms
                 _sensorSelector.SelectedItem.ToString()!;
 
             string attachmentType =
-                _attachmentTypeSelector.SelectedItem.ToString()!;
+                _attachmentTypeSelector.SelectedItem
+                    .ToString()!;
 
             try
             {
                 _attachFileButton.Enabled = false;
-                _attachFileButton.Text = "Uploading...";
+                _attachFileButton.Text =
+                    "Uploading...";
 
                 SensorAttachment? attachment =
                     await _apiClient.UploadAttachmentAsync(
@@ -831,7 +877,8 @@ namespace SmartX.Client.Forms
             finally
             {
                 _attachFileButton.Enabled = true;
-                _attachFileButton.Text = "Attach File";
+                _attachFileButton.Text =
+                    "Attach File";
             }
         }
 
