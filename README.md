@@ -191,30 +191,42 @@ The API receives files using multipart upload and stores them using the encrypte
 
 ## 11. API Endpoints
 
+Smart-X exposes REST API endpoints for sensor management, telemetry ingestion, deployment validation and file attachments.
+
 ### 11.1 Sensors
 
-```http
-GET  /api/sensors
-GET  /api/sensors/{id}
-POST /api/sensors
-PUT  /api/sensors/{id}
-```
+| Method | Endpoint            | Purpose                        |
+| ------ | ------------------- | ------------------------------ |
+| GET    | `/api/sensors`      | Returns all registered sensors |
+| GET    | `/api/sensors/{id}` | Returns a sensor by ID         |
+| POST   | `/api/sensors`      | Registers a new sensor         |
+| PUT    | `/api/sensors/{id}` | Updates an existing sensor     |
 
 ### 11.2 Telemetry
 
-```http
-GET  /api/telemetry
-GET  /api/telemetry/{deviceId}
-POST /api/telemetry/temperature
-POST /api/telemetry/power
-POST /api/telemetry/switch
-POST /api/telemetry/validate-deployment
-```
+| Method | Endpoint                             | Purpose                                 |
+| ------ | ------------------------------------ | --------------------------------------- |
+| GET    | `/api/telemetry`                     | Returns all telemetry records           |
+| GET    | `/api/telemetry/{deviceId}`          | Returns telemetry for a specific device |
+| POST   | `/api/telemetry/temperature`         | Receives temperature telemetry          |
+| POST   | `/api/telemetry/power`               | Receives power consumption telemetry    |
+| POST   | `/api/telemetry/switch`              | Receives actuator switch telemetry      |
+| POST   | `/api/telemetry/validate-deployment` | Validates a deployment hierarchy        |
 
 ### 11.3 Attachments
 
-```http
-POST /api/sensors/{deviceId}/attachments
+| Method | Endpoint                              | Purpose                                |
+| ------ | ------------------------------------- | -------------------------------------- |
+| POST   | `/api/sensors/{deviceId}/attachments` | Uploads a file attachment for a sensor |
+
+### 11.4 Telemetry Request Types
+
+The telemetry endpoints use the generic `TelemetryPacket<T>` model:
+
+```text
+TelemetryPacket<float>  → Temperature
+TelemetryPacket<int>    → Power Consumption
+TelemetryPacket<bool>   → Actuator
 ```
 
 ---
