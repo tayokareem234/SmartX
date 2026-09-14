@@ -9,7 +9,7 @@ namespace SmartX.Api.Services
         // Multi-dimensional array for sequential raw telemetry batches.
         // Rows represent telemetry entries.
         // Columns represent:
-        // 0 = value
+        // 0 = telemetry value
         // 1 = anomaly flag
         // 2 = timestamp value
         private readonly double[,] _rawTelemetryBatch =
@@ -17,7 +17,13 @@ namespace SmartX.Api.Services
 
         private int _batchPosition = 0;
 
+        // Optimized collection used after raw telemetry
+        // has been collected into the temporary batch array.
+        private readonly List<TelemetryRecord> _processedTelemetry =
+            new List<TelemetryRecord>();
+
         // Jagged array for variable-length sensor histories.
+        // Each row represents the numeric history of one sensor.
         private readonly double[][] _sensorHistory =
             new double[20][];
 
@@ -66,7 +72,7 @@ namespace SmartX.Api.Services
                 sensor,
                 isAnomaly);
 
-            var record = new TelemetryRecord
+            TelemetryRecord record = new TelemetryRecord
             {
                 Id = GetNextTelemetryId(),
                 DeviceId = deviceId,
@@ -106,7 +112,7 @@ namespace SmartX.Api.Services
             sensor.LastCommunication = DateTime.UtcNow;
             sensor.Status = "Normal";
 
-            var record = new TelemetryRecord
+            TelemetryRecord record = new TelemetryRecord
             {
                 Id = GetNextTelemetryId(),
                 DeviceId = packet.DeviceId,
@@ -148,15 +154,16 @@ namespace SmartX.Api.Services
                 return 0;
             }
 
-            var current = new SensorValue(
+            SensorValue current = new SensorValue(
                 currentValue,
                 unit);
 
-            var previousValue = new SensorValue(
+            SensorValue previousValue = new SensorValue(
                 previous.NumericValue,
                 previous.Unit);
 
-            // Operator overloading is used here.
+            // Operator overloading is used here to
+            // calculate the telemetry delta directly.
             return current - previousValue;
         }
 
@@ -164,8 +171,8 @@ namespace SmartX.Api.Services
             double value,
             bool isAnomaly)
         {
-            if (_batchPosition >= _rawTelemetryBatch
-                .GetLength(0))
+            if (_batchPosition >=
+                _rawTelemetryBatch.GetLength(0))
             {
                 TransferBatchToList();
             }
@@ -185,8 +192,9 @@ namespace SmartX.Api.Services
 
         private void TransferBatchToList()
         {
-            // The raw multi-dimensional array acts as
-            // a temporary memory-efficient batch.
+            // Transfer the sequential raw telemetry data
+            // from the multi-dimensional array into the
+            // optimized List<T> collection.
 
             for (int row = 0;
                  row < _batchPosition;
@@ -198,10 +206,37 @@ namespace SmartX.Api.Services
                 bool isAnomaly =
                     _rawTelemetryBatch[row, 1] == 1;
 
-                _ = value;
-                _ = isAnomaly;
+                long timestampMilliseconds =
+                    Convert.ToInt64(
+                        _rawTelemetryBatch[row, 2]);
+
+                TelemetryRecord batchRecord =
+                    new TelemetryRecord
+                    {
+                        Id = _processedTelemetry.Count + 1,
+                        DeviceId = "BATCH",
+                        SensorCategory = "Raw Telemetry",
+                        NumericValue = value,
+                        Delta = 0,
+                        Unit = "Raw",
+                        Timestamp =
+                            DateTimeOffset
+                                .FromUnixTimeMilliseconds(
+                                    timestampMilliseconds)
+                                .UtcDateTime,
+                        IsAnomaly = isAnomaly,
+                        IsDisconnected = false,
+                        Status = isAnomaly
+                            ? "Anomaly"
+                            : "Normal"
+                    };
+
+                _processedTelemetry.Add(
+                    batchRecord);
             }
 
+            // The temporary array batch is cleared logically
+            // by resetting its current position.
             _batchPosition = 0;
         }
 
@@ -250,6 +285,7 @@ namespace SmartX.Api.Services
             bool isAnomaly)
         {
             sensor.IsConnected = true;
+
             sensor.LastCommunication =
                 DateTime.UtcNow;
 
