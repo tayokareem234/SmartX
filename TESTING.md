@@ -232,3 +232,41 @@ Passed.
 The uploaded file is stored in the UploadedFiles directory with an encrypted file extension.
 
 The storage service uses AES encryption with a randomly generated initialization vector for each uploaded file.
+
+### Test 15: Valid Deployment Hierarchy
+
+**Input**
+
+```text
+Facility
+└── Zone
+    └── Sub-Zone
+        └── Room
+            └── Sensor
+
+Expected Result
+
+The complete deployment structure is accepted because each child node follows the permitted parent-child relationship.
+
+Result
+
+Passed.
+
+The API returned a successful response indicating that the deployment structure is valid.
+
+Test 16: Invalid Deployment Hierarchy
+
+Input
+
+Facility
+└── Sensor
+
+Expected Result
+
+The deployment structure is rejected because a sensor cannot be placed directly under a facility.
+
+Result
+
+Passed.
+
+The API returned a bad request response and identified the invalid deployment path.
