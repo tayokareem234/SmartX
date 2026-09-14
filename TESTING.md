@@ -199,3 +199,36 @@ Result
 Passed.
 
 The disconnected sensor condition is displayed while normal telemetry records are excluded.
+
+### Test 13: Upload Sensor Attachment
+
+**Input**
+
+```text
+Device: TEMP-001
+Attachment Type: Sensor Log
+File: test.txt
+
+Expected Result
+
+The selected file is uploaded to the API and associated with the selected sensor.
+
+Result
+
+Passed.
+
+The API successfully received the file and returned the attachment information.
+
+Test 14: Encrypted File Storage
+
+Expected Result
+
+The uploaded file is stored by the API using the encrypted file storage service.
+
+Result
+
+Passed.
+
+The uploaded file is stored in the UploadedFiles directory with an encrypted file extension.
+
+The storage service uses AES encryption with a randomly generated initialization vector for each uploaded file.
