@@ -116,8 +116,8 @@ namespace SmartX.Api.Controllers
         // PUT: api/sensors/1
         [HttpPut("{id}")]
         public IActionResult UpdateSensor(
-            int id,
-            [FromBody] Sensor updatedSensor)
+     int id,
+     [FromBody] Sensor updatedSensor)
         {
             Sensor? existingSensor = _dataStore.Sensors
                 .FirstOrDefault(s => s.Id == id);
@@ -130,14 +130,76 @@ namespace SmartX.Api.Controllers
                 });
             }
 
+            if (updatedSensor == null)
+            {
+                return BadRequest(new
+                {
+                    message = "Sensor data is required."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(updatedSensor.MacAddress))
+            {
+                return BadRequest(new
+                {
+                    message = "MAC address is required."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(updatedSensor.UniqueIdentifier))
+            {
+                return BadRequest(new
+                {
+                    message = "Unique identifier is required."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(updatedSensor.DeploymentLocation))
+            {
+                return BadRequest(new
+                {
+                    message = "Deployment location is required."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(updatedSensor.SensorCategory))
+            {
+                return BadRequest(new
+                {
+                    message = "Sensor category is required."
+                });
+            }
+
+            bool duplicateIdentifier = _dataStore.Sensors
+                .Any(s =>
+                    s.Id != id &&
+                    s.UniqueIdentifier.Equals(
+                        updatedSensor.UniqueIdentifier,
+                        StringComparison.OrdinalIgnoreCase));
+
+            if (duplicateIdentifier)
+            {
+                return Conflict(new
+                {
+                    message =
+                        "A sensor with this unique identifier already exists."
+                });
+            }
+
             existingSensor.MacAddress = updatedSensor.MacAddress;
-            existingSensor.UniqueIdentifier = updatedSensor.UniqueIdentifier;
-            existingSensor.DeploymentLocation = updatedSensor.DeploymentLocation;
+            existingSensor.UniqueIdentifier =
+                updatedSensor.UniqueIdentifier;
+            existingSensor.DeploymentLocation =
+                updatedSensor.DeploymentLocation;
             existingSensor.Zone = updatedSensor.Zone;
-            existingSensor.SensorCategory = updatedSensor.SensorCategory;
-            existingSensor.IsConnected = updatedSensor.IsConnected;
-            existingSensor.LastCommunication = updatedSensor.LastCommunication;
-            existingSensor.Status = updatedSensor.Status;
+            existingSensor.SensorCategory =
+                updatedSensor.SensorCategory;
+            existingSensor.IsConnected =
+                updatedSensor.IsConnected;
+            existingSensor.LastCommunication =
+                updatedSensor.LastCommunication;
+            existingSensor.Status =
+                updatedSensor.Status;
 
             return NoContent();
         }
