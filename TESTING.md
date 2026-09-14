@@ -116,3 +116,21 @@ Result
 Passed.
 
 The reading is displayed in the recent telemetry history with the correct device, category and unit.
+
+### Test 7: Simulate Sensor Disconnect
+
+**Input**
+
+```text
+Device: ACT-001
+Action: Simulate Disconnect
+
+Expected Result
+
+The selected sensor is marked as disconnected and the dashboard displays a disconnect alert.
+
+Result
+
+Passed.
+
+The sensor status changes to disconnected and the dashboard highlights the condition for the user.
