@@ -372,3 +372,28 @@ The API returned a bad request response and identified the invalid deployment pa
 The completed functional tests produced the expected results for the implemented Part 1 features.
 
 The testing evidence recorded in this document can be used alongside the GitHub source code and demonstration video to show the operation of the Smart-X Data Ingestion and Validation Gateway.
+
+## Part 1 Feature Coverage
+
+The following table summarises the main Smart-X Part 1 features and the corresponding testing completed.
+
+| Part 1 Feature | Tested |
+|---|---|
+| Sensor registration | Yes |
+| Client-side validation | Yes |
+| API validation | Yes |
+| Generic telemetry packets | Yes |
+| Temperature telemetry | Yes |
+| Power telemetry | Yes |
+| Actuator telemetry | Yes |
+| Anomaly detection | Yes |
+| Sensor disconnect detection | Yes |
+| Telemetry filtering | Yes |
+| File attachments | Yes |
+| Encrypted file storage | Yes |
+| Recursive deployment validation | Yes |
+| Multi-dimensional telemetry batch processing | Yes |
+| Jagged sensor history | Yes |
+| Operator overloading | Yes |
+
+This testing coverage provides evidence that the main implemented Part 1 functionality has been exercised through the Smart-X client and API.
