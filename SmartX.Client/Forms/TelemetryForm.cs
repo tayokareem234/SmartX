@@ -13,6 +13,7 @@ namespace SmartX.Client.Forms
         private Label _actuatorValue = null!;
         private Label _alertLabel = null!;
         private ListBox _telemetryList = null!;
+
         private List<TelemetryRecord> _allTelemetryRecords = new();
 
         private Button _normalTemperatureButton = null!;
@@ -60,11 +61,9 @@ namespace SmartX.Client.Forms
             SuspendLayout();
 
             Text = "Smart-X | Telemetry Dashboard";
+            StartPosition = FormStartPosition.CenterScreen;
 
             AutoScaleMode = AutoScaleMode.Dpi;
-
-
-            StartPosition = FormStartPosition.CenterScreen;
 
             Width = 1200;
             Height = 800;
@@ -73,11 +72,14 @@ namespace SmartX.Client.Forms
 
             BackColor = Color.FromArgb(245, 247, 250);
 
-            // Header
+            // =========================================================
+            // HEADER
+            // =========================================================
+
             Panel header = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 90,
+                Height = 105,
                 BackColor = Color.FromArgb(30, 41, 59)
             };
 
@@ -90,18 +92,19 @@ namespace SmartX.Client.Forms
                     24,
                     FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(30, 15)
+                Location = new Point(30, 14)
             };
 
             Label subtitle = new Label
             {
-                Text = "Real-Time Sensor Data Ingestion and Monitoring",
+                Text =
+                    "Real-Time Sensor Data Ingestion and Monitoring",
                 ForeColor = Color.LightGray,
                 Font = new Font(
                     "Segoe UI",
                     10),
                 AutoSize = true,
-                Location = new Point(32, 55)
+                Location = new Point(32, 62)
             };
 
             header.Controls.Add(title);
@@ -109,7 +112,10 @@ namespace SmartX.Client.Forms
 
             Controls.Add(header);
 
-            // Connection status
+            // =========================================================
+            // CONNECTION STATUS
+            // =========================================================
+
             _connectionStatus = new Label
             {
                 Text = "Connecting to API...",
@@ -118,39 +124,47 @@ namespace SmartX.Client.Forms
                     10,
                     FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(30, 110)
+                Location = new Point(30, 120)
             };
 
             Controls.Add(_connectionStatus);
 
-            // Sensor cards
+            // =========================================================
+            // SENSOR CARDS
+            // =========================================================
+
+            int contentWidth = Math.Max(
+                500,
+                ClientSize.Width - 60);
+
             TableLayoutPanel cards =
                 new TableLayoutPanel
                 {
-                    Location = new Point(30, 150),
-                    Width = 1120,
+                    Location = new Point(30, 155),
+                    Width = contentWidth,
                     Height = 150,
                     ColumnCount = 3,
                     RowCount = 1,
-                    ColumnStyles =
-                    {
-                        new ColumnStyle(
-                            SizeType.Percent,
-                            33.33f),
-
-                        new ColumnStyle(
-                            SizeType.Percent,
-                            33.33f),
-
-                        new ColumnStyle(
-                            SizeType.Percent,
-                            33.34f)
-                    },
                     Anchor =
                         AnchorStyles.Top |
                         AnchorStyles.Left |
                         AnchorStyles.Right
                 };
+
+            cards.ColumnStyles.Add(
+                new ColumnStyle(
+                    SizeType.Percent,
+                    33.33f));
+
+            cards.ColumnStyles.Add(
+                new ColumnStyle(
+                    SizeType.Percent,
+                    33.33f));
+
+            cards.ColumnStyles.Add(
+                new ColumnStyle(
+                    SizeType.Percent,
+                    33.34f));
 
             Panel temperatureCard =
                 CreateSensorCard(
@@ -187,7 +201,10 @@ namespace SmartX.Client.Forms
 
             Controls.Add(cards);
 
-            // Alert section
+            // =========================================================
+            // ALERT SECTION
+            // =========================================================
+
             _alertLabel = new Label
             {
                 Text = "SYSTEM STATUS: Monitoring telemetry",
@@ -197,8 +214,8 @@ namespace SmartX.Client.Forms
                     FontStyle.Bold),
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleLeft,
-                Location = new Point(30, 325),
-                Width = 1120,
+                Location = new Point(30, 320),
+                Width = contentWidth,
                 Height = 45,
                 Anchor =
                     AnchorStyles.Top |
@@ -208,11 +225,14 @@ namespace SmartX.Client.Forms
 
             Controls.Add(_alertLabel);
 
-            // Telemetry simulation section
+            // =========================================================
+            // TELEMETRY SIMULATION
+            // =========================================================
+
             Panel simulationPanel = new Panel
             {
-                Location = new Point(30, 380),
-                Width = 1120,
+                Location = new Point(30, 375),
+                Width = contentWidth,
                 Height = 80,
                 Anchor =
                     AnchorStyles.Top |
@@ -286,7 +306,9 @@ namespace SmartX.Client.Forms
             _disconnectButton.Click +=
                 DisconnectButton_Click;
 
-            simulationPanel.Controls.Add(simulationTitle);
+            simulationPanel.Controls.Add(
+                simulationTitle);
+
             simulationPanel.Controls.Add(
                 _normalTemperatureButton);
 
@@ -304,11 +326,14 @@ namespace SmartX.Client.Forms
 
             Controls.Add(simulationPanel);
 
-            // File attachment section
+            // =========================================================
+            // FILE ATTACHMENTS
+            // =========================================================
+
             Panel attachmentPanel = new Panel
             {
-                Location = new Point(30, 470),
-                Width = 1120,
+                Location = new Point(30, 465),
+                Width = contentWidth,
                 Height = 90,
                 Anchor =
                     AnchorStyles.Top |
@@ -380,7 +405,10 @@ namespace SmartX.Client.Forms
 
             Controls.Add(attachmentPanel);
 
-            // Telemetry history
+            // =========================================================
+            // RECENT TELEMETRY
+            // =========================================================
+
             Label historyTitle = new Label
             {
                 Text = "Recent Telemetry",
@@ -392,6 +420,8 @@ namespace SmartX.Client.Forms
                 Location = new Point(30, 570)
             };
 
+            Controls.Add(historyTitle);
+
             Label filterLabel = new Label
             {
                 Text = "Filter:",
@@ -400,23 +430,37 @@ namespace SmartX.Client.Forms
                     10,
                     FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(800, 570)
+                Location = new Point(
+                    Math.Max(650, ClientSize.Width - 400),
+                    575),
+                Anchor =
+                    AnchorStyles.Top |
+                    AnchorStyles.Right
             };
+
+            Controls.Add(filterLabel);
 
             _telemetryFilter = new ComboBox
             {
-                Location = new Point(870, 570),
+                Location = new Point(
+                    Math.Max(720, ClientSize.Width - 330),
+                    570),
                 Width = 255,
                 Height = 30,
-                DropDownStyle = ComboBoxStyle.DropDownList
+                DropDownStyle =
+                    ComboBoxStyle.DropDownList,
+                Anchor =
+                    AnchorStyles.Top |
+                    AnchorStyles.Right
             };
 
             _telemetryFilter.Items.AddRange(
                 new object[]
                 {
-        "Show All",
-        "Normal Only",
-        "Anomalies Only"
+                    "Show All",
+                    "Normal Only",
+                    "Anomalies Only",
+                    "Disconnected Only"
                 });
 
             _telemetryFilter.SelectedIndex = 0;
@@ -424,29 +468,31 @@ namespace SmartX.Client.Forms
             _telemetryFilter.SelectedIndexChanged +=
                 TelemetryFilter_SelectedIndexChanged;
 
-            Controls.Add(historyTitle);
-            Controls.Add(filterLabel);
             Controls.Add(_telemetryFilter);
+
+            // =========================================================
+            // TELEMETRY LIST
+            // =========================================================
 
             _telemetryList = new ListBox
             {
                 Location = new Point(30, 615),
-                Width = 1120,
+                Width = contentWidth,
                 Height = 105,
                 Font = new Font(
-         "Consolas",
-         10),
+                    "Consolas",
+                    10),
                 DrawMode = DrawMode.OwnerDrawFixed,
                 ItemHeight = 24,
                 Anchor =
-         AnchorStyles.Top |
-         AnchorStyles.Left |
-         AnchorStyles.Right |
-         AnchorStyles.Bottom
+                    AnchorStyles.Top |
+                    AnchorStyles.Left |
+                    AnchorStyles.Right |
+                    AnchorStyles.Bottom
             };
 
             _telemetryList.DrawItem +=
-      TelemetryList_DrawItem;
+                TelemetryList_DrawItem;
 
             Controls.Add(_telemetryList);
 
@@ -550,7 +596,7 @@ namespace SmartX.Client.Forms
         }
 
         private void DisplayTelemetry(
-    List<TelemetryRecord> records)
+            List<TelemetryRecord> records)
         {
             _allTelemetryRecords = records;
 
@@ -558,8 +604,8 @@ namespace SmartX.Client.Forms
         }
 
         private void TelemetryFilter_SelectedIndexChanged(
-    object? sender,
-    EventArgs e)
+            object? sender,
+            EventArgs e)
         {
             ApplyTelemetryFilter();
         }
@@ -590,6 +636,12 @@ namespace SmartX.Client.Forms
                 filteredRecords =
                     _allTelemetryRecords.Where(
                         r => r.IsAnomaly);
+            }
+            else if (selectedFilter == "Disconnected Only")
+            {
+                filteredRecords =
+                    _allTelemetryRecords.Where(
+                        r => r.IsDisconnected);
             }
 
             _telemetryList.Items.Clear();
@@ -644,12 +696,16 @@ namespace SmartX.Client.Forms
             using Brush textBrush =
                 new SolidBrush(textColor);
 
+            Font displayFont =
+                e.Font ??
+                _telemetryList.Font;
+
             e.Graphics.DrawString(
-     displayText,
-     e.Font ?? _telemetryList.Font,
-     textBrush,
-     e.Bounds.Left + 4,
-     e.Bounds.Top + 4);
+                displayText,
+                displayFont,
+                textBrush,
+                e.Bounds.Left + 4,
+                e.Bounds.Top + 4);
 
             e.DrawFocusRectangle();
         }
@@ -679,6 +735,11 @@ namespace SmartX.Client.Forms
                 _temperatureValue.Text =
                     $"{temperature.NumericValue} " +
                     $"{temperature.Unit}";
+
+                _temperatureValue.ForeColor =
+                    temperature.IsAnomaly
+                        ? Color.DarkRed
+                        : Color.Black;
             }
 
             if (power != null)
@@ -686,6 +747,9 @@ namespace SmartX.Client.Forms
                 _powerValue.Text =
                     $"{power.NumericValue} " +
                     $"{power.Unit}";
+
+                _powerValue.ForeColor =
+                    Color.Black;
             }
 
             if (actuatorSensor != null &&
@@ -984,6 +1048,7 @@ namespace SmartX.Client.Forms
             try
             {
                 _attachFileButton.Enabled = false;
+
                 _attachFileButton.Text =
                     "Uploading...";
 
@@ -1017,6 +1082,7 @@ namespace SmartX.Client.Forms
             finally
             {
                 _attachFileButton.Enabled = true;
+
                 _attachFileButton.Text =
                     "Attach File";
             }
