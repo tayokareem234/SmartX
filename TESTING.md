@@ -134,3 +134,68 @@ Result
 Passed.
 
 The sensor status changes to disconnected and the dashboard highlights the condition for the user.
+
+### Test 9: Show All
+
+**Input**
+
+```text
+Filter: Show All
+
+Expected Result
+
+All available telemetry records are displayed.
+
+Result
+
+Passed.
+
+Normal, anomalous and disconnected telemetry conditions are displayed in the telemetry history.
+
+Test 10: Normal Only
+
+Input
+
+Filter: Normal Only
+
+Expected Result
+
+Only telemetry records with a normal status are displayed.
+
+Result
+
+Passed.
+
+Anomalous and disconnected records are excluded from the displayed results.
+
+Test 11: Anomalies Only
+
+Input
+
+Filter: Anomalies Only
+
+Expected Result
+
+Only telemetry records identified as anomalies are displayed.
+
+Result
+
+Passed.
+
+The temperature anomaly records are displayed while normal records are excluded.
+
+Test 12: Disconnected Only
+
+Input
+
+Filter: Disconnected Only
+
+Expected Result
+
+Only disconnected sensor conditions are displayed.
+
+Result
+
+Passed.
+
+The disconnected sensor condition is displayed while normal telemetry records are excluded.
