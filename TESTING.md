@@ -1,6 +1,60 @@
 # Smart-X Testing
 
-## Sensor Registration Testing
+## 1. Testing Environment
+
+Testing was performed using the Smart-X Windows Forms client together with the ASP.NET Core Web API.
+
+The API was started first so that the client could communicate with the available endpoints. The Windows Forms dashboard was then used to perform the functional tests.
+
+## 2. Testing Approach
+
+The testing process followed a functional approach. Each major Part 1 feature was tested using valid and invalid inputs where applicable.
+
+The main areas tested were:
+
+1. Sensor registration and validation
+2. Telemetry ingestion
+3. Telemetry anomaly detection
+4. Sensor disconnect detection
+5. Telemetry filtering
+6. File attachments
+7. Recursive deployment validation
+
+## 3. Client and API Validation
+
+Smart-X uses validation at both application layers.
+
+### 3.1 Client-Side Validation
+
+The Windows Forms client checks user input before sending registration requests to the API.
+
+Examples include:
+
+* Required field validation
+* MAC address format validation
+* Unique identifier format and length validation
+* Location length validation
+* Zone / node length validation
+* Sensor category selection
+
+### 3.2 API Validation
+
+The API performs its own validation after receiving requests.
+
+Examples include:
+
+* Required sensor information
+* Duplicate sensor identifiers
+* Registered device verification
+* Telemetry unit validation
+* Deployment hierarchy validation
+* Attachment validation
+
+This two-layer approach prevents invalid user input from being accepted solely because client-side validation was bypassed.
+
+---
+
+## 4. Sensor Registration Testing
 
 The sensor registration workflow was tested through the Smart-X Windows Forms client and API.
 
@@ -8,60 +62,71 @@ The sensor registration workflow was tested through the Smart-X Windows Forms cl
 
 **Input**
 
-Test 1
+```text
 MAC Address: AA:BB:CC
 Unique Identifier: TEST-001
 Deployment Location: Lab 201
 Zone / Node: Zone C
 Sensor Category: Environmental
+```
 
-Expected Result
+**Expected Result**
 
 The client-side validation rejects the MAC address before an API request is sent.
 
-Result
+**Result**
 
 Passed.
 
 The user is shown a validation message and the MAC address field receives focus.
 
+### Test 2: Valid Sensor Registration
 
-Test 2
+**Input**
+
+```text
 MAC Address: AA:BB:CC:99:88:77
 Unique Identifier: TEMP-002
 Deployment Location: Lab 201
 Zone / Node: Zone C
 Sensor Category: Environmental
+```
 
-Expected Result
+**Expected Result**
 
 The sensor is accepted by the API, added to the sensor collection and displayed in the dashboard.
 
-Result
+**Result**
 
 Passed.
 
 The registration completed successfully and the sensor list was refreshed.
 
+### Test 3: Duplicate Sensor Identifier
 
-Test 3
+**Input**
+
+```text
 MAC Address: AA:BB:CC:11:22:44
 Unique Identifier: TEMP-001
 Deployment Location: Lab 202
 Zone / Node: Zone C
 Sensor Category: Environmental
+```
 
-Expected Result
+**Expected Result**
 
 The API rejects the registration because the unique identifier already exists.
 
-Result
+**Result**
 
 Passed.
 
 The API returned a conflict response indicating that a sensor with the unique identifier already exists.
 
-## Telemetry Anomaly Detection Testing
+---
+
+## 5. Telemetry Anomaly Detection Testing
 
 The telemetry processing workflow was tested using simulated temperature and power readings.
 
@@ -72,46 +137,51 @@ The telemetry processing workflow was tested using simulated temperature and pow
 ```text
 Device: TEMP-001
 Temperature: 25.5 °C
+```
 
-Expected Result
+**Expected Result**
 
 The telemetry reading is accepted and recorded with a normal status.
 
-Result
+**Result**
 
 Passed.
 
 The reading is displayed as a normal telemetry record.
 
-Test 5: Temperature Anomaly
+### Test 5: Temperature Anomaly
 
-Input
+**Input**
 
+```text
 Device: TEMP-001
 Temperature: 75.5 °C
+```
 
-Expected Result
+**Expected Result**
 
 The reading is accepted but identified as an anomaly because it is outside the configured temperature range.
 
-Result
+**Result**
 
 Passed.
 
 The telemetry record is marked as an anomaly and the dashboard highlights the reading for troubleshooting.
 
-Test 6: Power Consumption Reading
+### Test 6: Power Consumption Reading
 
-Input
+**Input**
 
+```text
 Device: POWER-001
 Power Consumption: 1250 W
+```
 
-Expected Result
+**Expected Result**
 
 The reading is accepted and processed as power consumption telemetry.
 
-Result
+**Result**
 
 Passed.
 
@@ -124,16 +194,21 @@ The reading is displayed in the recent telemetry history with the correct device
 ```text
 Device: ACT-001
 Action: Simulate Disconnect
+```
 
-Expected Result
+**Expected Result**
 
 The selected sensor is marked as disconnected and the dashboard displays a disconnect alert.
 
-Result
+**Result**
 
 Passed.
 
 The sensor status changes to disconnected and the dashboard highlights the condition for the user.
+
+---
+
+## 6. Telemetry Filtering Testing
 
 ### Test 9: Show All
 
@@ -141,64 +216,75 @@ The sensor status changes to disconnected and the dashboard highlights the condi
 
 ```text
 Filter: Show All
+```
 
-Expected Result
+**Expected Result**
 
 All available telemetry records are displayed.
 
-Result
+**Result**
 
 Passed.
 
 Normal, anomalous and disconnected telemetry conditions are displayed in the telemetry history.
 
-Test 10: Normal Only
+### Test 10: Normal Only
 
-Input
+**Input**
 
+```text
 Filter: Normal Only
+```
 
-Expected Result
+**Expected Result**
 
 Only telemetry records with a normal status are displayed.
 
-Result
+**Result**
 
 Passed.
 
 Anomalous and disconnected records are excluded from the displayed results.
 
-Test 11: Anomalies Only
+### Test 11: Anomalies Only
 
-Input
+**Input**
 
+```text
 Filter: Anomalies Only
+```
 
-Expected Result
+**Expected Result**
 
 Only telemetry records identified as anomalies are displayed.
 
-Result
+**Result**
 
 Passed.
 
 The temperature anomaly records are displayed while normal records are excluded.
 
-Test 12: Disconnected Only
+### Test 12: Disconnected Only
 
-Input
+**Input**
 
+```text
 Filter: Disconnected Only
+```
 
-Expected Result
+**Expected Result**
 
 Only disconnected sensor conditions are displayed.
 
-Result
+**Result**
 
 Passed.
 
 The disconnected sensor condition is displayed while normal telemetry records are excluded.
+
+---
+
+## 7. File Attachment Testing
 
 ### Test 13: Upload Sensor Attachment
 
@@ -208,30 +294,35 @@ The disconnected sensor condition is displayed while normal telemetry records ar
 Device: TEMP-001
 Attachment Type: Sensor Log
 File: test.txt
+```
 
-Expected Result
+**Expected Result**
 
 The selected file is uploaded to the API and associated with the selected sensor.
 
-Result
+**Result**
 
 Passed.
 
 The API successfully received the file and returned the attachment information.
 
-Test 14: Encrypted File Storage
+### Test 14: Encrypted File Storage
 
-Expected Result
+**Expected Result**
 
 The uploaded file is stored by the API using the encrypted file storage service.
 
-Result
+**Result**
 
 Passed.
 
-The uploaded file is stored in the UploadedFiles directory with an encrypted file extension.
+The uploaded file is stored in the `UploadedFiles` directory with an encrypted file extension.
 
 The storage service uses AES encryption with a randomly generated initialization vector for each uploaded file.
+
+---
+
+## 8. Recursive Deployment Validation Testing
 
 ### Test 15: Valid Deployment Hierarchy
 
@@ -243,30 +334,41 @@ Facility
     └── Sub-Zone
         └── Room
             └── Sensor
+```
 
-Expected Result
+**Expected Result**
 
 The complete deployment structure is accepted because each child node follows the permitted parent-child relationship.
 
-Result
+**Result**
 
 Passed.
 
 The API returned a successful response indicating that the deployment structure is valid.
 
-Test 16: Invalid Deployment Hierarchy
+### Test 16: Invalid Deployment Hierarchy
 
-Input
+**Input**
 
+```text
 Facility
 └── Sensor
+```
 
-Expected Result
+**Expected Result**
 
 The deployment structure is rejected because a sensor cannot be placed directly under a facility.
 
-Result
+**Result**
 
 Passed.
 
 The API returned a bad request response and identified the invalid deployment path.
+
+---
+
+## 9. Test Result
+
+The completed functional tests produced the expected results for the implemented Part 1 features.
+
+The testing evidence recorded in this document can be used alongside the GitHub source code and demonstration video to show the operation of the Smart-X Data Ingestion and Validation Gateway.
