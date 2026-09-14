@@ -274,3 +274,42 @@ Content-Type: application/json
     }
   ]
 }
+
+                  ### Test generic float telemetry packet - Temperature
+
+POST https://localhost:44386/api/telemetry/temperature
+Content-Type: application/json
+
+{
+  "deviceId": "TEMP-001",
+  "timestamp": "2026-09-14T12:30:00Z",
+  "dataType": "Temperature",
+  "value": 26.5,
+  "unit": "°C"
+}
+
+  ### Test generic int telemetry packet - Power
+
+POST https://localhost:44386/api/telemetry/power
+Content-Type: application/json
+
+{
+  "deviceId": "POWER-001",
+  "timestamp": "2026-09-14T12:35:00Z",
+  "dataType": "Power Consumption",
+  "value": 1250,
+  "unit": "W"
+}
+
+### Test generic bool telemetry packet - Actuator
+
+POST https://localhost:44386/api/telemetry/switch
+Content-Type: application/json
+
+{
+  "deviceId": "ACT-001",
+  "timestamp": "2026-09-14T12:40:00Z",
+  "dataType": "Smart Switch",
+  "value": true,
+  "unit": "state"
+}
