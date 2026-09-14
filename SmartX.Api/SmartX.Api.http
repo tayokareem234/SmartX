@@ -174,3 +174,103 @@ Content-Type: text/plain
 ###
 
 POST https://localhost:44386/api/sensors/ACT-001/disconnect
+
+
+      ### Validate deployment hierarchy
+
+POST https://localhost:44386/api/telemetry/validate-deployment
+Content-Type: application/json
+
+{
+  "nodeId": "FAC-001",
+  "name": "Main Facility",
+  "nodeType": "Facility",
+  "children": [
+    {
+      "nodeId": "ZONE-001",
+      "name": "Zone A",
+      "nodeType": "Zone",
+      "children": [
+        {
+          "nodeId": "SUB-001",
+          "name": "Sub-Zone 1",
+          "nodeType": "Sub-Zone",
+          "children": [
+            {
+              "nodeId": "ROOM-101",
+              "name": "Room 101",
+              "nodeType": "Room",
+              "children": [
+                {
+                  "nodeId": "TEMP-001",
+                  "name": "Temperature Sensor",
+                  "nodeType": "Sensor",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+          ### Validate deployment hierarchy
+
+POST https://localhost:44386/api/telemetry/validate-deployment
+Content-Type: application/json
+
+{
+  "nodeId": "FAC-001",
+  "name": "Main Facility",
+  "nodeType": "Facility",
+  "children": [
+    {
+      "nodeId": "ZONE-001",
+      "name": "Zone A",
+      "nodeType": "Zone",
+      "children": [
+        {
+          "nodeId": "SUB-001",
+          "name": "Sub-Zone 1",
+          "nodeType": "Sub-Zone",
+          "children": [
+            {
+              "nodeId": "ROOM-101",
+              "name": "Room 101",
+              "nodeType": "Room",
+              "children": [
+                {
+                  "nodeId": "TEMP-001",
+                  "name": "Temperature Sensor",
+                  "nodeType": "Sensor",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+          ### Test invalid deployment hierarchy
+
+POST https://localhost:44386/api/telemetry/validate-deployment
+Content-Type: application/json
+
+{
+  "nodeId": "FAC-001",
+  "name": "Main Facility",
+  "nodeType": "Facility",
+  "children": [
+    {
+      "nodeId": "TEMP-001",
+      "name": "Temperature Sensor",
+      "nodeType": "Sensor",
+      "children": []
+    }
+  ]
+}

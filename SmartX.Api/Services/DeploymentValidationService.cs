@@ -12,6 +12,7 @@ namespace SmartX.Api.Services
             ValidateNodeRecursive(
                 root,
                 "Facility",
+                null,
                 errors);
 
             return errors;
@@ -20,6 +21,7 @@ namespace SmartX.Api.Services
         private void ValidateNodeRecursive(
             DeploymentNode node,
             string parentPath,
+            string? parentType,
             List<string> errors)
         {
             if (node == null)
@@ -53,6 +55,19 @@ namespace SmartX.Api.Services
                 errors.Add(
                     $"{currentPath}: NodeType is required.");
             }
+            else
+            {
+                ValidateNodeType(
+                    node.NodeType,
+                    currentPath,
+                    errors);
+
+                ValidateParentChildRelationship(
+                    parentType,
+                    node.NodeType,
+                    currentPath,
+                    errors);
+            }
 
             foreach (DeploymentNode child
                      in node.Children)
@@ -60,7 +75,97 @@ namespace SmartX.Api.Services
                 ValidateNodeRecursive(
                     child,
                     currentPath,
+                    node.NodeType,
                     errors);
+            }
+        }
+
+        private void ValidateNodeType(
+            string nodeType,
+            string currentPath,
+            List<string> errors)
+        {
+            string[] allowedTypes =
+            {
+                "Facility",
+                "Zone",
+                "Sub-Zone",
+                "Room",
+                "Sensor"
+            };
+
+            bool validType =
+                allowedTypes.Any(type =>
+                    type.Equals(
+                        nodeType,
+                        StringComparison.OrdinalIgnoreCase));
+
+            if (!validType)
+            {
+                errors.Add(
+                    $"{currentPath}: Unsupported node type '{nodeType}'. " +
+                    "Allowed types are Facility, Zone, Sub-Zone, Room and Sensor.");
+            }
+        }
+
+        private void ValidateParentChildRelationship(
+            string? parentType,
+            string childType,
+            string currentPath,
+            List<string> errors)
+        {
+            if (string.IsNullOrWhiteSpace(parentType))
+            {
+                return;
+            }
+
+            bool validRelationship =
+                parentType.Equals(
+                    "Facility",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? childType.Equals(
+                        "Zone",
+                        StringComparison.OrdinalIgnoreCase)
+
+                : parentType.Equals(
+                    "Zone",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? childType.Equals(
+                        "Sub-Zone",
+                        StringComparison.OrdinalIgnoreCase)
+                      || childType.Equals(
+                        "Room",
+                        StringComparison.OrdinalIgnoreCase)
+
+                : parentType.Equals(
+                    "Sub-Zone",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? childType.Equals(
+                        "Room",
+                        StringComparison.OrdinalIgnoreCase)
+                      || childType.Equals(
+                        "Sensor",
+                        StringComparison.OrdinalIgnoreCase)
+
+                : parentType.Equals(
+                    "Room",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? childType.Equals(
+                        "Sensor",
+                        StringComparison.OrdinalIgnoreCase)
+
+                : parentType.Equals(
+                    "Sensor",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? false
+
+                : true;
+
+            if (!validRelationship)
+            {
+                errors.Add(
+                    $"{currentPath}: Invalid deployment hierarchy. " +
+                    $"A {childType} cannot be placed directly under a {parentType}.");
             }
         }
     }
