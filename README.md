@@ -269,5 +269,3 @@ Network Topology
         ▼
     Final POE
 ```
-
----
