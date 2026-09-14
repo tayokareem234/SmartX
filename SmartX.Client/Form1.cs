@@ -1,6 +1,7 @@
 using SmartX.Client.Forms;
 using SmartX.Client.Services;
 using SmartX.Shared.Models;
+using System.Text.RegularExpressions;
 
 namespace SmartX.Client
 {
@@ -549,71 +550,141 @@ namespace SmartX.Client
 
         private bool ValidateRegistrationInput()
         {
-            if (string.IsNullOrWhiteSpace(
-                _macAddressTextBox.Text))
+            string macAddress =
+                _macAddressTextBox.Text.Trim();
+
+            string uniqueIdentifier =
+                _uniqueIdentifierTextBox.Text.Trim();
+
+            string location =
+                _locationTextBox.Text.Trim();
+
+            string zone =
+                _zoneTextBox.Text.Trim();
+
+            // =====================================================
+            // REQUIRED FIELD VALIDATION
+            // =====================================================
+
+            if (string.IsNullOrWhiteSpace(macAddress))
             {
-                MessageBox.Show(
+                ShowValidationMessage(
                     "Please enter the sensor MAC address.",
-                    "Validation",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
-                _macAddressTextBox.Focus();
+                    _macAddressTextBox);
 
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(
-                _uniqueIdentifierTextBox.Text))
+            if (string.IsNullOrWhiteSpace(uniqueIdentifier))
             {
-                MessageBox.Show(
+                ShowValidationMessage(
                     "Please enter the sensor unique identifier.",
-                    "Validation",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
-                _uniqueIdentifierTextBox.Focus();
+                    _uniqueIdentifierTextBox);
 
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(
-                _locationTextBox.Text))
+            if (string.IsNullOrWhiteSpace(location))
             {
-                MessageBox.Show(
+                ShowValidationMessage(
                     "Please enter the deployment location.",
-                    "Validation",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
-                _locationTextBox.Focus();
+                    _locationTextBox);
 
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(
-                _zoneTextBox.Text))
+            if (string.IsNullOrWhiteSpace(zone))
             {
-                MessageBox.Show(
+                ShowValidationMessage(
                     "Please enter the zone or node.",
-                    "Validation",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
-                _zoneTextBox.Focus();
+                    _zoneTextBox);
 
                 return false;
             }
 
             if (_categoryComboBox.SelectedIndex < 0)
             {
-                MessageBox.Show(
+                ShowValidationMessage(
                     "Please select a sensor category.",
-                    "Validation",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                    _categoryComboBox);
 
-                _categoryComboBox.Focus();
+                return false;
+            }
+
+            // =====================================================
+            // MAC ADDRESS FORMAT VALIDATION
+            // =====================================================
+
+            string macPattern =
+                "^([0-9A-Fa-f]{2}[:-]){5}" +
+                "[0-9A-Fa-f]{2}$";
+
+            if (!Regex.IsMatch(
+                    macAddress,
+                    macPattern))
+            {
+                ShowValidationMessage(
+                    "Please enter a valid MAC address.\n\n" +
+                    "Example: AA:BB:CC:99:88:77",
+                    _macAddressTextBox);
+
+                return false;
+            }
+
+            // =====================================================
+            // UNIQUE IDENTIFIER VALIDATION
+            // =====================================================
+
+            if (uniqueIdentifier.Length < 3 ||
+                uniqueIdentifier.Length > 30)
+            {
+                ShowValidationMessage(
+                    "The unique identifier must contain " +
+                    "between 3 and 30 characters.",
+                    _uniqueIdentifierTextBox);
+
+                return false;
+            }
+
+            string identifierPattern =
+                "^[A-Za-z0-9_-]+$";
+
+            if (!Regex.IsMatch(
+                    uniqueIdentifier,
+                    identifierPattern))
+            {
+                ShowValidationMessage(
+                    "The unique identifier may only contain " +
+                    "letters, numbers, hyphens and underscores.",
+                    _uniqueIdentifierTextBox);
+
+                return false;
+            }
+
+            // =====================================================
+            // DEPLOYMENT LOCATION VALIDATION
+            // =====================================================
+
+            if (location.Length > 100)
+            {
+                ShowValidationMessage(
+                    "The deployment location cannot exceed " +
+                    "100 characters.",
+                    _locationTextBox);
+
+                return false;
+            }
+
+            // =====================================================
+            // ZONE / NODE VALIDATION
+            // =====================================================
+
+            if (zone.Length > 50)
+            {
+                ShowValidationMessage(
+                    "The zone or node cannot exceed " +
+                    "50 characters.",
+                    _zoneTextBox);
 
                 return false;
             }
@@ -621,11 +692,27 @@ namespace SmartX.Client
             return true;
         }
 
+        private void ShowValidationMessage(
+            string message,
+            Control control)
+        {
+            MessageBox.Show(
+                message,
+                "Validation",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
+            control.Focus();
+        }
+
         private void ClearRegistrationFields()
         {
             _macAddressTextBox.Clear();
+
             _uniqueIdentifierTextBox.Clear();
+
             _locationTextBox.Clear();
+
             _zoneTextBox.Clear();
 
             _categoryComboBox.SelectedIndex = 0;
