@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Generated sensor uploads - do not commit uploaded files
+SmartX.Api/UploadedFiles/*
