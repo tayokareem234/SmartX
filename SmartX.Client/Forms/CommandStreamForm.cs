@@ -9,6 +9,8 @@ namespace SmartX.Client.Forms
 
         private readonly CommandPriorityService _commandPriorityService = new();
 
+        private readonly CommandHistoryService _commandHistoryService = new();
+
         private readonly List<SmartCommand> _commandHistory = new();
 
         private Label _statusLabel = null!;
@@ -24,6 +26,7 @@ namespace SmartX.Client.Forms
         private Button _addCommandButton = null!;
         private Button _processCommandButton = null!;
         private Button _processPriorityButton = null!;
+        private Button _undoButton = null!;
         private Button _refreshButton = null!;
 
         public CommandStreamForm()
@@ -264,10 +267,24 @@ namespace SmartX.Client.Forms
 
             Controls.Add(_processPriorityButton);
 
+            _undoButton = new Button
+            {
+                Text = "Undo Last Command",
+                Location = new Point(470, 620),
+                Width = 180,
+                Height = 35,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                Enabled = false
+            };
+
+            _undoButton.Click += UndoButton_Click;
+
+            Controls.Add(_undoButton);
+
             _refreshButton = new Button
             {
                 Text = "Refresh",
-                Location = new Point(470, 620),
+                Location = new Point(665, 620),
                 Width = 120,
                 Height = 35,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left
@@ -353,6 +370,8 @@ namespace SmartX.Client.Forms
 
             command.Status = "Processed";
 
+            _commandHistoryService.RecordProcessedCommand(command);
+
             RefreshCommandList();
 
             _statusLabel.Text =
@@ -377,6 +396,25 @@ namespace SmartX.Client.Forms
 
             _statusLabel.Text =
                 $"Priority command #{command.Id} processed for {command.DeviceId}.";
+        }
+
+        private void UndoButton_Click(object? sender, EventArgs e)
+        {
+            SmartCommand? command =
+                _commandHistoryService.UndoLastCommand();
+
+            if (command == null)
+            {
+                _statusLabel.Text = "There are no commands available to undo.";
+                return;
+            }
+
+            command.Status = "Undone";
+
+            RefreshCommandList();
+
+            _statusLabel.Text =
+                $"Command #{command.Id} has been undone.";
         }
 
         private void RefreshCommandList()
@@ -404,6 +442,9 @@ namespace SmartX.Client.Forms
 
             _processPriorityButton.Enabled =
                 _commandPriorityService.HasPendingCommands;
+            _undoButton.Enabled = _commandHistoryService.CanUndo;
         }
+
+
     }
 }
