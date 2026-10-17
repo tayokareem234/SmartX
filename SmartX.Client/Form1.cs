@@ -161,10 +161,12 @@ namespace SmartX.Client
                 TelemetryButton_Click;
 
             Button commandButton =
-                CreateModuleButton(
-                    "COMMAND STREAM",
-                    "Real-time commands and history",
-                    true);
+    CreateModuleButton(
+        "COMMAND STREAM",
+        "Real-time commands and history",
+        false);
+
+            commandButton.Click += CommandButton_Click;
 
             Button topologyButton =
                 CreateModuleButton(
@@ -726,6 +728,16 @@ namespace SmartX.Client
                 new TelemetryForm();
 
             telemetryForm.Show();
+        }
+
+        private void CommandButton_Click(
+    object? sender,
+    EventArgs e)
+        {
+            CommandStreamForm commandStreamForm =
+                new CommandStreamForm();
+
+            commandStreamForm.Show();
         }
     }
 }
