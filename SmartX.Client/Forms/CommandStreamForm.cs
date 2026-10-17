@@ -7,6 +7,8 @@ namespace SmartX.Client.Forms
     {
         private readonly CommandQueueService _commandQueueService = new();
 
+        private readonly CommandPriorityService _commandPriorityService = new();
+
         private readonly List<SmartCommand> _commandHistory = new();
 
         private Label _statusLabel = null!;
@@ -21,6 +23,7 @@ namespace SmartX.Client.Forms
 
         private Button _addCommandButton = null!;
         private Button _processCommandButton = null!;
+        private Button _processPriorityButton = null!;
         private Button _refreshButton = null!;
 
         public CommandStreamForm()
@@ -248,10 +251,23 @@ namespace SmartX.Client.Forms
             _processCommandButton.Click += ProcessCommandButton_Click;
             Controls.Add(_processCommandButton);
 
+            _processPriorityButton = new Button
+            {
+                Text = "Process Priority Command",
+                Location = new Point(245, 620),
+                Width = 210,
+                Height = 35,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left
+            };
+
+            _processPriorityButton.Click += ProcessPriorityButton_Click;
+
+            Controls.Add(_processPriorityButton);
+
             _refreshButton = new Button
             {
                 Text = "Refresh",
-                Location = new Point(245, 620),
+                Location = new Point(470, 620),
                 Width = 120,
                 Height = 35,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left
@@ -291,21 +307,38 @@ namespace SmartX.Client.Forms
                 return;
             }
 
-            SmartCommand command = _commandQueueService.Enqueue(
-                deviceId,
-                commandType,
-                description,
-                priority,
-                isUndoable: commandType is "SetThreshold" or "Reset");
+            SmartCommand command;
+
+            if (priority is "High" or "Critical")
+            {
+                command = _commandPriorityService.Enqueue(
+                    deviceId,
+                    commandType,
+                    description,
+                    priority,
+                    isUndoable: commandType is "SetThreshold" or "Reset");
+
+                _statusLabel.Text =
+                    $"Command #{command.Id} added to the priority queue.";
+            }
+            else
+            {
+                command = _commandQueueService.Enqueue(
+                    deviceId,
+                    commandType,
+                    description,
+                    priority,
+                    isUndoable: commandType is "SetThreshold" or "Reset");
+
+                _statusLabel.Text =
+                    $"Command #{command.Id} added to the FIFO queue.";
+            }
 
             _commandHistory.Add(command);
 
             _descriptionTextBox.Clear();
 
             RefreshCommandList();
-
-            _statusLabel.Text =
-                $"Command #{command.Id} added to the FIFO queue.";
         }
 
         private void ProcessCommandButton_Click(object? sender, EventArgs e)
@@ -326,6 +359,26 @@ namespace SmartX.Client.Forms
                 $"Command #{command.Id} processed for {command.DeviceId}.";
         }
 
+        private void ProcessPriorityButton_Click(
+    object? sender,
+    EventArgs e)
+        {
+            SmartCommand? command = _commandPriorityService.Dequeue();
+
+            if (command == null)
+            {
+                _statusLabel.Text = "There are no pending priority commands.";
+                return;
+            }
+
+            command.Status = "Processed";
+
+            RefreshCommandList();
+
+            _statusLabel.Text =
+                $"Priority command #{command.Id} processed for {command.DeviceId}.";
+        }
+
         private void RefreshCommandList()
         {
             _commandHistoryList.Items.Clear();
@@ -339,11 +392,18 @@ namespace SmartX.Client.Forms
                     $"{command.Status}");
             }
 
+            int fifoCount = _commandQueueService.Count;
+            int priorityCount = _commandPriorityService.Count;
+
             _queueCountLabel.Text =
-                $"Pending commands: {_commandQueueService.Count}";
+                $"Pending commands: {fifoCount + priorityCount} " +
+                $"(FIFO: {fifoCount}, Priority: {priorityCount})";
 
             _processCommandButton.Enabled =
                 _commandQueueService.HasPendingCommands;
+
+            _processPriorityButton.Enabled =
+                _commandPriorityService.HasPendingCommands;
         }
     }
 }
