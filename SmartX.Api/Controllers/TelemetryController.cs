@@ -9,181 +9,155 @@ namespace SmartX.Api.Controllers
     public class TelemetryController : ControllerBase
     {
         private readonly SmartXDataStore _dataStore;
-
-        private readonly TelemetryProcessingService
-            _telemetryService;
-
-        private readonly DeploymentValidationService
-    _deploymentValidator;
+        private readonly TelemetryProcessingService _telemetryService;
+        private readonly DeploymentValidationService _deploymentValidator;
+        private readonly TelemetryHistoryService _historyService;
 
         public TelemetryController(
-     SmartXDataStore dataStore,
-     TelemetryProcessingService telemetryService,
-     DeploymentValidationService deploymentValidator)
+            SmartXDataStore dataStore,
+            TelemetryProcessingService telemetryService,
+            DeploymentValidationService deploymentValidator,
+            TelemetryHistoryService historyService)
         {
             _dataStore = dataStore;
             _telemetryService = telemetryService;
             _deploymentValidator = deploymentValidator;
+            _historyService = historyService;
         }
-
 
         // GET: api/telemetry
         [HttpGet]
-        public ActionResult<IEnumerable<TelemetryRecord>>
-            GetTelemetry()
+        public ActionResult<IEnumerable<TelemetryRecord>> GetTelemetry()
         {
             return Ok(_dataStore.TelemetryRecords);
         }
 
         // GET: api/telemetry/{deviceId}
         [HttpGet("{deviceId}")]
-        public ActionResult<IEnumerable<TelemetryRecord>>
-            GetDeviceTelemetry(string deviceId)
+        public ActionResult<IEnumerable<TelemetryRecord>> GetDeviceTelemetry(
+            string deviceId)
         {
-            var records =
-                _dataStore.TelemetryRecords
-                    .Where(t =>
-                        t.DeviceId.Equals(
-                            deviceId,
-                            StringComparison.OrdinalIgnoreCase))
-                    .OrderByDescending(
-                        t => t.Timestamp)
-                    .ToList();
+            var records = _dataStore.TelemetryRecords
+                .Where(t => t.DeviceId.Equals(
+                    deviceId,
+                    StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(t => t.Timestamp)
+                .ToList();
 
             if (records.Count == 0)
             {
                 return NotFound(new
                 {
-                    message =
-                        $"No telemetry found for device '{deviceId}'."
+                    message = $"No telemetry found for device '{deviceId}'."
                 });
             }
 
             return Ok(records);
         }
 
+        // GET: api/telemetry/history/sorted
+        [HttpGet("history/sorted")]
+        public ActionResult<IEnumerable<TelemetryRecord>>
+            GetSortedTelemetryHistory()
+        {
+            return Ok(_historyService.GetAllRecords());
+        }
+
         // POST: api/telemetry/temperature
         [HttpPost("temperature")]
-        public ActionResult<TelemetryRecord>
-            ReceiveTemperature(
-                [FromBody]
-                TelemetryPacket<float> packet)
+        public ActionResult<TelemetryRecord> ReceiveTemperature(
+            [FromBody] TelemetryPacket<float> packet)
         {
             if (packet == null)
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Telemetry packet is required."
+                    message = "Telemetry packet is required."
                 });
             }
 
             try
             {
                 TelemetryRecord record =
-                    _telemetryService
-                        .ProcessNumericTelemetry(
-                            packet.DeviceId,
-                            packet.Value,
-                            "Temperature",
-                            packet.Unit,
-                            0,
-                            50);
+                    _telemetryService.ProcessNumericTelemetry(
+                        packet.DeviceId,
+                        packet.Value,
+                        "Temperature",
+                        packet.Unit,
+                        0,
+                        50);
 
                 return Ok(record);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
+                return NotFound(new { message = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
+                return BadRequest(new { message = ex.Message });
             }
         }
 
         // POST: api/telemetry/power
         [HttpPost("power")]
-        public ActionResult<TelemetryRecord>
-            ReceivePower(
-                [FromBody]
-                TelemetryPacket<int> packet)
+        public ActionResult<TelemetryRecord> ReceivePower(
+            [FromBody] TelemetryPacket<int> packet)
         {
             if (packet == null)
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Telemetry packet is required."
+                    message = "Telemetry packet is required."
                 });
             }
 
             try
             {
                 TelemetryRecord record =
-                    _telemetryService
-                        .ProcessNumericTelemetry(
-                            packet.DeviceId,
-                            packet.Value,
-                            "Power Consumption",
-                            packet.Unit,
-                            0,
-                            5000);
+                    _telemetryService.ProcessNumericTelemetry(
+                        packet.DeviceId,
+                        packet.Value,
+                        "Power Consumption",
+                        packet.Unit,
+                        0,
+                        5000);
 
                 return Ok(record);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
+                return NotFound(new { message = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
+                return BadRequest(new { message = ex.Message });
             }
         }
 
         // POST: api/telemetry/switch
         [HttpPost("switch")]
-        public ActionResult<TelemetryRecord>
-            ReceiveSwitch(
-                [FromBody]
-                TelemetryPacket<bool> packet)
+        public ActionResult<TelemetryRecord> ReceiveSwitch(
+            [FromBody] TelemetryPacket<bool> packet)
         {
             if (packet == null)
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Telemetry packet is required."
+                    message = "Telemetry packet is required."
                 });
             }
 
             try
             {
                 TelemetryRecord record =
-                    _telemetryService
-                        .ProcessSwitchTelemetry(packet);
+                    _telemetryService.ProcessSwitchTelemetry(packet);
 
                 return Ok(record);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
+                return NotFound(new { message = ex.Message });
             }
         }
 
@@ -201,8 +175,7 @@ namespace SmartX.Api.Controllers
             }
 
             List<string> errors =
-                _deploymentValidator
-                    .ValidateDeployment(root);
+                _deploymentValidator.ValidateDeployment(root);
 
             if (errors.Count > 0)
             {
@@ -216,8 +189,7 @@ namespace SmartX.Api.Controllers
             return Ok(new
             {
                 valid = true,
-                message =
-                    "Deployment structure is valid."
+                message = "Deployment structure is valid."
             });
         }
     }

@@ -6,6 +6,8 @@ namespace SmartX.Api.Services
     {
         private readonly SmartXDataStore _dataStore;
 
+        private readonly TelemetryHistoryService _historyService;
+
         // Multi-dimensional array for sequential raw telemetry batches.
         // Rows represent telemetry entries.
         // Columns represent:
@@ -28,9 +30,11 @@ namespace SmartX.Api.Services
             new double[20][];
 
         public TelemetryProcessingService(
-            SmartXDataStore dataStore)
+     SmartXDataStore dataStore,
+     TelemetryHistoryService historyService)
         {
             _dataStore = dataStore;
+            _historyService = historyService;
         }
 
         public TelemetryRecord ProcessNumericTelemetry(
@@ -90,6 +94,8 @@ namespace SmartX.Api.Services
 
             _dataStore.TelemetryRecords.Add(record);
 
+            _historyService.AddRecord(record);
+
             UpdateJaggedSensorHistory(
                 sensor.Id,
                 value);
@@ -131,6 +137,7 @@ namespace SmartX.Api.Services
             };
 
             _dataStore.TelemetryRecords.Add(record);
+            _historyService.AddRecord(record);
 
             return record;
         }
