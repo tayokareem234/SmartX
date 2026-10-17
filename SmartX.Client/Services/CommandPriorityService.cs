@@ -7,7 +7,7 @@ namespace SmartX.Client.Services
         private readonly PriorityQueue<SmartCommand, int>
             _priorityQueue = new();
 
-        private int _nextCommandId = 1;
+       
 
         public int Count => _priorityQueue.Count;
 
@@ -54,7 +54,7 @@ namespace SmartX.Client.Services
 
             SmartCommand command = new SmartCommand
             {
-                Id = _nextCommandId++,
+                Id = CommandIdGenerator.GetNextId(),
                 DeviceId = deviceId,
                 CommandType = commandType,
                 Description = description,
