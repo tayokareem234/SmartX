@@ -4,11 +4,16 @@ namespace SmartX.Api.Services
 {
     public class SmartXDataStore
     {
+        // Existing collections used by Part 1.
         public List<Sensor> Sensors { get; } = new();
 
         public List<TelemetryRecord> TelemetryRecords { get; } = new();
 
         public List<SensorAttachment> Attachments { get; } = new();
+
+        // Part 2: Dictionary for efficient sensor lookup.
+        public Dictionary<string, Sensor> SensorsByIdentifier { get; }
+            = new(StringComparer.OrdinalIgnoreCase);
 
         public SmartXDataStore()
         {
@@ -17,7 +22,7 @@ namespace SmartX.Api.Services
 
         private void SeedSensors()
         {
-            Sensors.Add(new Sensor
+            AddSensor(new Sensor
             {
                 Id = 1,
                 MacAddress = "AA:BB:CC:11:22:33",
@@ -30,7 +35,7 @@ namespace SmartX.Api.Services
                 Status = "Normal"
             });
 
-            Sensors.Add(new Sensor
+            AddSensor(new Sensor
             {
                 Id = 2,
                 MacAddress = "AA:BB:CC:44:55:66",
@@ -43,7 +48,7 @@ namespace SmartX.Api.Services
                 Status = "Normal"
             });
 
-            Sensors.Add(new Sensor
+            AddSensor(new Sensor
             {
                 Id = 3,
                 MacAddress = "AA:BB:CC:77:88:99",
@@ -55,6 +60,81 @@ namespace SmartX.Api.Services
                 LastCommunication = DateTime.UtcNow.AddMinutes(-10),
                 Status = "Disconnected"
             });
+        }
+
+        // Adds a sensor to both the existing list and the dictionary.
+        public void AddSensor(Sensor sensor)
+        {
+            if (sensor == null)
+            {
+                throw new ArgumentNullException(nameof(sensor));
+            }
+
+            if (string.IsNullOrWhiteSpace(sensor.UniqueIdentifier))
+            {
+                throw new ArgumentException(
+                    "A sensor identifier is required.",
+                    nameof(sensor));
+            }
+
+            if (SensorsByIdentifier.ContainsKey(sensor.UniqueIdentifier))
+            {
+                throw new InvalidOperationException(
+                    $"Sensor '{sensor.UniqueIdentifier}' already exists.");
+            }
+
+            Sensors.Add(sensor);
+            SensorsByIdentifier.Add(sensor.UniqueIdentifier, sensor);
+        }
+
+        // Finds a sensor by its unique identifier.
+        public Sensor? GetSensorByIdentifier(string deviceId)
+        {
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                return null;
+            }
+
+            return SensorsByIdentifier.TryGetValue(
+                deviceId,
+                out Sensor? sensor)
+                    ? sensor
+                    : null;
+        }
+
+        public bool UpdateSensorIdentifier(
+    Sensor sensor,
+    string newIdentifier)
+        {
+            if (sensor == null ||
+                string.IsNullOrWhiteSpace(newIdentifier))
+            {
+                return false;
+            }
+
+            string oldIdentifier = sensor.UniqueIdentifier;
+
+            if (oldIdentifier.Equals(
+                newIdentifier,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (SensorsByIdentifier.ContainsKey(newIdentifier))
+            {
+                return false;
+            }
+
+            if (!SensorsByIdentifier.Remove(oldIdentifier))
+            {
+                return false;
+            }
+
+            sensor.UniqueIdentifier = newIdentifier;
+            SensorsByIdentifier.Add(newIdentifier, sensor);
+
+            return true;
         }
 
         public int GetNextAttachmentId()
@@ -71,10 +151,7 @@ namespace SmartX.Api.Services
 
         public bool SetSensorDisconnected(string deviceId)
         {
-            Sensor? sensor = Sensors.FirstOrDefault(s =>
-                s.UniqueIdentifier.Equals(
-                    deviceId,
-                    StringComparison.OrdinalIgnoreCase));
+            Sensor? sensor = GetSensorByIdentifier(deviceId);
 
             if (sensor == null)
             {

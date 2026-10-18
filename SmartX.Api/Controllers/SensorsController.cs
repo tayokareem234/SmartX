@@ -105,7 +105,17 @@ namespace SmartX.Api.Controllers
             sensor.LastCommunication = DateTime.UtcNow;
             sensor.Status = "Normal";
 
-            _dataStore.Sensors.Add(sensor);
+            try
+            {
+                _dataStore.AddSensor(sensor);
+            }
+            catch (InvalidOperationException)
+            {
+                return Conflict(new
+                {
+                    message = "A sensor with this unique identifier already exists."
+                });
+            }
 
             return CreatedAtAction(
                 nameof(GetSensor),
@@ -187,8 +197,16 @@ namespace SmartX.Api.Controllers
             }
 
             existingSensor.MacAddress = updatedSensor.MacAddress;
-            existingSensor.UniqueIdentifier =
-                updatedSensor.UniqueIdentifier;
+            if (!_dataStore.UpdateSensorIdentifier(
+    existingSensor,
+    updatedSensor.UniqueIdentifier))
+            {
+                return Conflict(new
+                {
+                    message =
+                        "The new identifier is invalid or already in use."
+                });
+            }
             existingSensor.DeploymentLocation =
                 updatedSensor.DeploymentLocation;
             existingSensor.Zone = updatedSensor.Zone;
