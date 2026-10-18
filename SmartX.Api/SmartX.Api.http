@@ -313,3 +313,79 @@ Content-Type: application/json
   "value": true,
   "unit": "state"
 }
+
+### Get all sensors
+GET https://localhost:44386/api/sensors
+Accept: application/json
+
+  ### TEST 1: Update sensor without changing its identifier
+PUT https://localhost:44386/api/sensors/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "macAddress": "AA:BB:CC:11:22:33",
+  "uniqueIdentifier": "TEMP-001",
+  "deploymentLocation": "Room 101 - Updated",
+  "zone": "Zone A",
+  "sensorCategory": "Environmental",
+  "isConnected": true,
+  "lastCommunication": "2026-10-17T19:00:00Z",
+  "status": "Normal"
+}
+
+### Verify TEST 1
+GET https://localhost:44386/api/sensors/1
+Accept: application/jsond
+
+  ### TEST 2: Change to a new identifier
+PUT https://localhost:44386/api/sensors/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "macAddress": "AA:BB:CC:11:22:33",
+  "uniqueIdentifier": "TEMP-002",
+  "deploymentLocation": "Room 101 - Updated",
+  "zone": "Zone A",
+  "sensorCategory": "Environmental",
+  "isConnected": true,
+  "lastCommunication": "2026-10-17T19:00:00Z",
+  "status": "Normal"
+}
+
+### Verify TEST 2
+GET https://localhost:44386/api/sensors
+Accept: application/json
+
+### TEST 3: Reject a duplicate identifier
+PUT https://localhost:44386/api/sensors/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "macAddress": "AA:BB:CC:11:22:33",
+  "uniqueIdentifier": "POWER-001",
+  "deploymentLocation": "Room 101 - Updated",
+  "zone": "Zone A",
+  "sensorCategory": "Environmental",
+  "isConnected": true,
+  "lastCommunication": "2026-10-17T19:00:00Z",
+  "status": "Normal"
+}
+
+### Verify TEST 3
+GET https://localhost:44386/api/sensors
+Accept: application/json
+
+### Get telemetry history sorted by timestamp
+GET https://localhost:44386/api/telemetry/history/sorted
+Accept: application/json
+
+  ### Get telemetry history sorted by timestamp
+GET https://localhost:44386/api/telemetry/history/sorted
+Accept: application/json
+
+  ### Get telemetry history sorted by timestamp
+GET https://localhost:44386/api/telemetry/history/sorted
+Accept: application/json

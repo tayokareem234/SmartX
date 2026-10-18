@@ -10,9 +10,13 @@ namespace SmartX.Api.Controllers
     {
         private readonly SmartXDataStore _dataStore;
 
-        public SensorsController(SmartXDataStore dataStore)
+        private readonly TelemetryProcessingService _telemetryService;
+        public SensorsController(
+      SmartXDataStore dataStore,
+      TelemetryProcessingService telemetryService)
         {
             _dataStore = dataStore;
+            _telemetryService = telemetryService;
         }
 
         // GET: api/sensors
@@ -222,7 +226,6 @@ namespace SmartX.Api.Controllers
             return NoContent();
         }
 
-        // POST: api/sensors/TEMP-001/disconnect
         [HttpPost("{deviceId}/disconnect")]
         public IActionResult SimulateDisconnect(string deviceId)
         {
@@ -241,6 +244,10 @@ namespace SmartX.Api.Controllers
                 .First(s => s.UniqueIdentifier.Equals(
                     deviceId,
                     StringComparison.OrdinalIgnoreCase));
+
+            _telemetryService.UpdateDisconnectedTracking(
+                sensor.UniqueIdentifier,
+                true);
 
             return Ok(new
             {

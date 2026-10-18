@@ -63,6 +63,20 @@ namespace SmartX.Api.Controllers
             return Ok(_historyService.GetAllRecords());
         }
 
+        // GET: api/telemetry/tracking/anomalies
+        [HttpGet("tracking/anomalies")]
+        public ActionResult<IEnumerable<string>> GetActiveAnomalies()
+        {
+            return Ok(_telemetryService.GetActiveAnomalies());
+        }
+
+        // GET: api/telemetry/tracking/disconnected
+        [HttpGet("tracking/disconnected")]
+        public ActionResult<IEnumerable<string>> GetDisconnectedDevices()
+        {
+            return Ok(_telemetryService.GetDisconnectedDevices());
+        }
+
         // POST: api/telemetry/temperature
         [HttpPost("temperature")]
         public ActionResult<TelemetryRecord> ReceiveTemperature(
@@ -158,6 +172,10 @@ namespace SmartX.Api.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
 
