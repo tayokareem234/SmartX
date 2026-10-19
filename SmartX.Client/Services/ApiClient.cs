@@ -117,6 +117,25 @@ namespace SmartX.Client.Services
         }
 
         // =====================================================
+        // PREDICTIVE SUGGESTIONS
+        // =====================================================
+
+        public async Task<List<PredictiveSuggestion>>
+            GetSuggestionsAsync()
+        {
+            HttpResponseMessage response =
+                await _httpClient.GetAsync("suggestions");
+
+            response.EnsureSuccessStatusCode();
+
+            List<PredictiveSuggestion>? suggestions =
+                await response.Content
+                    .ReadFromJsonAsync<List<PredictiveSuggestion>>();
+
+            return suggestions ?? new List<PredictiveSuggestion>();
+        }
+
+        // =====================================================
         // SENSOR DISCONNECT SIMULATION
         // =====================================================
 

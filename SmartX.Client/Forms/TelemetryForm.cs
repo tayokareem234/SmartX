@@ -14,6 +14,9 @@ namespace SmartX.Client.Forms
         private Label _alertLabel = null!;
         private ListBox _telemetryList = null!;
 
+        private Label _suggestionsStatusLabel = null!;
+        private ListBox _suggestionsList = null!;
+
         private List<TelemetryRecord> _allTelemetryRecords = new();
 
         private Button _normalTemperatureButton = null!;
@@ -36,6 +39,7 @@ namespace SmartX.Client.Forms
             BuildDashboard();
 
             _ = LoadTelemetryAsync();
+            _ = LoadSuggestionsAsync();
         }
 
         private void PopulateSensorSelector(List<Sensor> sensors)
@@ -66,9 +70,9 @@ namespace SmartX.Client.Forms
             AutoScaleMode = AutoScaleMode.Dpi;
 
             Width = 1200;
-            Height = 800;
+            Height = 950;
 
-            MinimumSize = new Size(1000, 700);
+            MinimumSize = new Size(1000, 850);
 
             BackColor = Color.FromArgb(245, 247, 250);
 
@@ -226,12 +230,63 @@ namespace SmartX.Client.Forms
             Controls.Add(_alertLabel);
 
             // =========================================================
+            // PREDICTIVE SUGGESTED ACTIONS
+            // =========================================================
+
+            Panel suggestionsPanel = new Panel
+            {
+                Location = new Point(30, 370),
+                Width = contentWidth,
+                Height = 150,
+                Anchor = AnchorStyles.Top |
+                         AnchorStyles.Left |
+                         AnchorStyles.Right,
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            Label suggestionsTitle = new Label
+            {
+                Text = "Suggested Actions | Automated Insights",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                AutoSize = true,
+                Location = new Point(12, 8)
+            };
+
+            _suggestionsStatusLabel = new Label
+            {
+                Text = "Loading suggestions...",
+                Font = new Font("Segoe UI", 9),
+                AutoSize = true,
+                Location = new Point(12, 38),
+                ForeColor = Color.DimGray
+            };
+
+            _suggestionsList = new ListBox
+            {
+                Location = new Point(12, 62),
+                Width = contentWidth - 26,
+                Height = 76,
+                Anchor = AnchorStyles.Top |
+                         AnchorStyles.Left |
+                         AnchorStyles.Right,
+                Font = new Font("Segoe UI", 9),
+                HorizontalScrollbar = true
+            };
+
+            suggestionsPanel.Controls.Add(suggestionsTitle);
+            suggestionsPanel.Controls.Add(_suggestionsStatusLabel);
+            suggestionsPanel.Controls.Add(_suggestionsList);
+
+            Controls.Add(suggestionsPanel);
+
+            // =========================================================
             // TELEMETRY SIMULATION
             // =========================================================
 
             Panel simulationPanel = new Panel
             {
-                Location = new Point(30, 375),
+                Location = new Point(30, 515),
                 Width = contentWidth,
                 Height = 80,
                 Anchor =
@@ -332,7 +387,7 @@ namespace SmartX.Client.Forms
 
             Panel attachmentPanel = new Panel
             {
-                Location = new Point(30, 465),
+                Location = new Point(30, 605),
                 Width = contentWidth,
                 Height = 90,
                 Anchor =
@@ -417,7 +472,7 @@ namespace SmartX.Client.Forms
                     16,
                     FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(30, 570)
+                Location = new Point(30, 710)
             };
 
             Controls.Add(historyTitle);
@@ -431,8 +486,8 @@ namespace SmartX.Client.Forms
                     FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(
-                    Math.Max(650, ClientSize.Width - 400),
-                    575),
+                    Math.Max(650, ClientSize.Width - 330),
+                    710),
                 Anchor =
                     AnchorStyles.Top |
                     AnchorStyles.Right
@@ -444,7 +499,7 @@ namespace SmartX.Client.Forms
             {
                 Location = new Point(
                     Math.Max(720, ClientSize.Width - 330),
-                    570),
+                    710),
                 Width = 255,
                 Height = 30,
                 DropDownStyle =
@@ -476,9 +531,9 @@ namespace SmartX.Client.Forms
 
             _telemetryList = new ListBox
             {
-                Location = new Point(30, 615),
+                Location = new Point(30, 755),
                 Width = contentWidth,
-                Height = 105,
+                Height = 150,
                 Font = new Font(
                     "Consolas",
                     10),
@@ -978,6 +1033,8 @@ namespace SmartX.Client.Forms
             UpdateSensorCards(
                 records,
                 sensors);
+
+            await LoadSuggestionsAsync();
         }
 
         private async void AttachFileButton_Click(
@@ -1098,5 +1155,66 @@ namespace SmartX.Client.Forms
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }
+
+        // =========================================================
+        // LOAD PREDICTIVE SUGGESTIONS
+        // =========================================================
+
+        private async Task LoadSuggestionsAsync()
+        {
+            try
+            {
+                List<PredictiveSuggestion> suggestions =
+                    await _apiClient.GetSuggestionsAsync();
+
+                _suggestionsList.Items.Clear();
+
+                if (suggestions.Count == 0)
+                {
+                    _suggestionsStatusLabel.Text =
+                        "No predictive actions are currently required.";
+
+                    _suggestionsStatusLabel.ForeColor =
+                        Color.DarkGreen;
+
+                    _suggestionsList.Items.Add(
+                        "All monitored devices are operating normally.");
+
+                    return;
+                }
+
+                _suggestionsStatusLabel.Text =
+                    $"{suggestions.Count} suggested action(s) identified.";
+
+                _suggestionsStatusLabel.ForeColor =
+                    Color.DarkOrange;
+
+                foreach (PredictiveSuggestion suggestion in suggestions)
+                {
+                    string displayText =
+                        $"[{suggestion.Severity}] " +
+                        $"{suggestion.DeviceId} | " +
+                        $"{suggestion.Title} — " +
+                        $"{suggestion.SuggestedAction}";
+
+                    _suggestionsList.Items.Add(displayText);
+                }
+            }
+            catch (Exception ex)
+            {
+                _suggestionsStatusLabel.Text =
+                    "Unable to load predictive suggestions.";
+
+                _suggestionsStatusLabel.ForeColor =
+                    Color.DarkRed;
+
+                _suggestionsList.Items.Clear();
+
+                _suggestionsList.Items.Add(
+                    $"API error: {ex.Message}");
+            }
+        }
     }
+
+
 }
