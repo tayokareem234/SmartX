@@ -389,3 +389,71 @@ Accept: application/json
   ### Get telemetry history sorted by timestamp
 GET https://localhost:44386/api/telemetry/history/sorted
 Accept: application/json
+
+  ### Submit anomalous temperature
+POST https://localhost:44386/api/telemetry/temperature
+Content-Type: application/json
+
+{
+  "deviceId": "TEMP-001",
+  "timestamp": "2026-10-18T10:00:00Z",
+  "dataType": "float",
+  "value": 75.5,
+  "unit": "°C"
+}
+
+###
+
+### Get active anomalies
+GET https://localhost:44386/api/telemetry/tracking/anomalies
+Accept: application/json
+
+  POST https://localhost:44386/api/telemetry/switch
+Content-Type: application/json
+
+{
+  "deviceId": "ACT-001",
+  "timestamp": "2026-10-18T10:02:00Z",
+  "dataType": "bool",
+  "value": true,
+  "unit": "Boolean"
+}
+GET https://localhost:44386/api/telemetry/tracking/disconnected
+Accept: application/json
+
+  ### Test HashSet: Disconnect ACT-001
+POST https://localhost:44386/api/sensors/ACT-001/disconnect
+
+###
+### Get disconnected devices
+GET https://localhost:44386/api/telemetry/tracking/disconnected
+Accept: application/json
+
+### Reconnect ACT-001 through switch telemetry
+POST https://localhost:44386/api/telemetry/switch
+Content-Type: application/json
+
+{
+  "deviceId": "ACT-001",
+  "timestamp": "2026-10-18T10:02:00Z",
+  "dataType": "bool",
+  "value": true,
+  "unit": "Boolean"
+}
+
+###
+### Verify disconnected devices after reconnection
+GET https://localhost:44386/api/telemetry/tracking/disconnected
+Accept: application/json
+
+### Get predictive suggestions
+GET https://localhost:44386/api/suggestions
+Accept: application/json
+
+### Retrieve processed command history
+GET https://localhost:44386/api/commands/history
+Accept: application/json
+
+  ### Retrieve processed command history
+GET https://localhost:7117/api/commands/history
+Accept: application/json

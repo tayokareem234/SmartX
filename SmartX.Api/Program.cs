@@ -18,6 +18,8 @@ builder.Services.AddSingleton<TelemetryHistoryService>();
 
 builder.Services.AddSingleton<PredictiveSuggestionService>();
 
+builder.Services.AddSingleton<CommandHistoryStore>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

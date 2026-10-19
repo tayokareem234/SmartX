@@ -12,7 +12,7 @@ namespace SmartX.Client.Services
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri(
-                    "https://localhost:44386/api/")
+                    "https://localhost:7117/api/")
             };
         }
 
@@ -194,6 +194,58 @@ namespace SmartX.Client.Services
 
             return await response.Content
                 .ReadFromJsonAsync<SensorAttachment>();
+        }
+        // =====================================================
+        // COMMAND HISTORY
+        // =====================================================
+
+        public async Task<SmartCommand?> RecordProcessedCommandAsync(
+            SmartCommand command)
+        {
+            HttpResponseMessage response =
+                await _httpClient.PostAsJsonAsync(
+                    "commands/history",
+                    command);
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content
+                .ReadFromJsonAsync<SmartCommand>();
+        }
+
+        public async Task<List<SmartCommand>> GetCommandHistoryAsync()
+        {
+            HttpResponseMessage response =
+                await _httpClient.GetAsync("commands/history");
+
+            response.EnsureSuccessStatusCode();
+
+            List<SmartCommand>? commands =
+                await response.Content.ReadFromJsonAsync<List<SmartCommand>>();
+
+            return commands ?? new List<SmartCommand>();
+        }
+
+        public async Task<List<SmartCommand>> GetCommandsForDeviceAsync(
+            string deviceId)
+        {
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                throw new ArgumentException(
+                    "Device ID is required.",
+                    nameof(deviceId));
+            }
+
+            HttpResponseMessage response =
+                await _httpClient.GetAsync(
+                    $"commands/history/device/{Uri.EscapeDataString(deviceId)}");
+
+            response.EnsureSuccessStatusCode();
+
+            List<SmartCommand>? commands =
+                await response.Content.ReadFromJsonAsync<List<SmartCommand>>();
+
+            return commands ?? new List<SmartCommand>();
         }
     }
 }

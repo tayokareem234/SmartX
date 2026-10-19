@@ -17,5 +17,11 @@
         public string Status { get; set; } = "Pending";
 
         public bool IsUndoable { get; set; }
+
+        // Records when the command finishes processing.
+        public DateTime? ProcessedAt { get; set; }
+
+        // Records whether the command completed successfully.
+        public bool? WasSuccessful { get; set; }
     }
 }

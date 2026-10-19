@@ -11,6 +11,9 @@ namespace SmartX.Client.Forms
 
         private readonly CommandHistoryService _commandHistoryService = new();
 
+        private readonly ApiClient _apiClient = new();
+
+        // Stores commands displayed in the Command Stream interface.
         private readonly List<SmartCommand> _commandHistory = new();
 
         private Label _statusLabel = null!;
@@ -32,7 +35,9 @@ namespace SmartX.Client.Forms
         public CommandStreamForm()
         {
             InitializeComponent();
+
             BuildInterface();
+
             RefreshCommandList();
         }
 
@@ -45,6 +50,10 @@ namespace SmartX.Client.Forms
             MinimumSize = new Size(900, 650);
 
             BackColor = Color.FromArgb(245, 247, 250);
+
+            // =====================================================
+            // HEADER
+            // =====================================================
 
             Panel header = new Panel
             {
@@ -73,7 +82,12 @@ namespace SmartX.Client.Forms
 
             header.Controls.Add(title);
             header.Controls.Add(subtitle);
+
             Controls.Add(header);
+
+            // =====================================================
+            // STATUS
+            // =====================================================
 
             _statusLabel = new Label
             {
@@ -86,7 +100,9 @@ namespace SmartX.Client.Forms
 
             Controls.Add(_statusLabel);
 
-            // Command creation section
+            // =====================================================
+            // COMMAND CREATION
+            // =====================================================
 
             Label createTitle = new Label
             {
@@ -122,6 +138,7 @@ namespace SmartX.Client.Forms
             });
 
             _sensorSelector.SelectedIndex = 0;
+
             Controls.Add(_sensorSelector);
 
             Label commandTypeLabel = new Label
@@ -149,6 +166,7 @@ namespace SmartX.Client.Forms
             });
 
             _commandTypeSelector.SelectedIndex = 0;
+
             Controls.Add(_commandTypeSelector);
 
             Label priorityLabel = new Label
@@ -176,6 +194,7 @@ namespace SmartX.Client.Forms
             });
 
             _prioritySelector.SelectedItem = "Normal";
+
             Controls.Add(_prioritySelector);
 
             Label descriptionLabel = new Label
@@ -204,9 +223,12 @@ namespace SmartX.Client.Forms
             };
 
             _addCommandButton.Click += AddCommandButton_Click;
+
             Controls.Add(_addCommandButton);
 
-            // Queue status
+            // =====================================================
+            // QUEUE STATUS
+            // =====================================================
 
             _queueCountLabel = new Label
             {
@@ -217,6 +239,10 @@ namespace SmartX.Client.Forms
             };
 
             Controls.Add(_queueCountLabel);
+
+            // =====================================================
+            // COMMAND HISTORY
+            // =====================================================
 
             Label historyTitle = new Label
             {
@@ -242,6 +268,10 @@ namespace SmartX.Client.Forms
 
             Controls.Add(_commandHistoryList);
 
+            // =====================================================
+            // PROCESS FIFO COMMAND
+            // =====================================================
+
             _processCommandButton = new Button
             {
                 Text = "Process Next Command",
@@ -252,7 +282,12 @@ namespace SmartX.Client.Forms
             };
 
             _processCommandButton.Click += ProcessCommandButton_Click;
+
             Controls.Add(_processCommandButton);
+
+            // =====================================================
+            // PROCESS PRIORITY COMMAND
+            // =====================================================
 
             _processPriorityButton = new Button
             {
@@ -266,6 +301,10 @@ namespace SmartX.Client.Forms
             _processPriorityButton.Click += ProcessPriorityButton_Click;
 
             Controls.Add(_processPriorityButton);
+
+            // =====================================================
+            // UNDO
+            // =====================================================
 
             _undoButton = new Button
             {
@@ -281,6 +320,10 @@ namespace SmartX.Client.Forms
 
             Controls.Add(_undoButton);
 
+            // =====================================================
+            // REFRESH
+            // =====================================================
+
             _refreshButton = new Button
             {
                 Text = "Refresh",
@@ -293,22 +336,30 @@ namespace SmartX.Client.Forms
             _refreshButton.Click += (_, _) =>
             {
                 RefreshCommandList();
+
                 _statusLabel.Text = "Command list refreshed.";
             };
 
             Controls.Add(_refreshButton);
         }
 
+        // =========================================================
+        // ADD COMMAND
+        // =========================================================
+
         private void AddCommandButton_Click(object? sender, EventArgs e)
         {
             string deviceId =
-                _sensorSelector.SelectedItem?.ToString() ?? string.Empty;
+                _sensorSelector.SelectedItem?.ToString()
+                ?? string.Empty;
 
             string commandType =
-                _commandTypeSelector.SelectedItem?.ToString() ?? string.Empty;
+                _commandTypeSelector.SelectedItem?.ToString()
+                ?? string.Empty;
 
             string priority =
-                _prioritySelector.SelectedItem?.ToString() ?? string.Empty;
+                _prioritySelector.SelectedItem?.ToString()
+                ?? string.Empty;
 
             string description = _descriptionTextBox.Text.Trim();
 
@@ -321,6 +372,7 @@ namespace SmartX.Client.Forms
                     MessageBoxIcon.Warning);
 
                 _descriptionTextBox.Focus();
+
                 return;
             }
 
@@ -358,45 +410,138 @@ namespace SmartX.Client.Forms
             RefreshCommandList();
         }
 
-        private void ProcessCommandButton_Click(object? sender, EventArgs e)
+        // =========================================================
+        // PROCESS FIFO COMMAND AND RECORD IT IN THE API
+        // =========================================================
+
+        private async void ProcessCommandButton_Click(
+            object? sender,
+            EventArgs e)
         {
+            if (_processCommandButton.Enabled == false)
+            {
+                return;
+            }
+
             SmartCommand? command = _commandQueueService.Dequeue();
 
             if (command == null)
             {
                 _statusLabel.Text = "There are no pending commands.";
+
+                RefreshCommandList();
+
                 return;
             }
 
-            command.Status = "Processed";
+            _processCommandButton.Enabled = false;
 
-            _commandHistoryService.RecordProcessedCommand(command);
+            try
+            {
+                // Mark the simulated command as processed.
+                command.Status = "Processed";
+                command.ProcessedAt = DateTime.UtcNow;
+                command.WasSuccessful = true;
 
-            RefreshCommandList();
+                // Preserve local history and undo functionality.
+                _commandHistoryService.RecordProcessedCommand(command);
 
-            _statusLabel.Text =
-                $"Command #{command.Id} processed for {command.DeviceId}.";
+                // Record the processed command on the API server.
+                await _apiClient.RecordProcessedCommandAsync(command);
+
+                _statusLabel.Text =
+                    $"Command #{command.Id} processed and recorded for {command.DeviceId}.";
+            }
+            catch (Exception ex)
+            {
+                _statusLabel.Text =
+                    $"Command history could not be confirmed: {ex.Message}";
+
+                MessageBox.Show(
+                    "The command was processed locally, but the API " +
+                    "history could not be confirmed.\n\n" +
+                    ex.Message,
+                    "Command History Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            finally
+            {
+                RefreshCommandList();
+
+                _processCommandButton.Enabled =
+                    _commandQueueService.HasPendingCommands;
+            }
         }
 
-        private void ProcessPriorityButton_Click(
-    object? sender,
-    EventArgs e)
+        // =========================================================
+        // PROCESS PRIORITY COMMAND AND RECORD IT IN THE API
+        // =========================================================
+
+        private async void ProcessPriorityButton_Click(
+            object? sender,
+            EventArgs e)
         {
+            if (_processPriorityButton.Enabled == false)
+            {
+                return;
+            }
+
             SmartCommand? command = _commandPriorityService.Dequeue();
 
             if (command == null)
             {
-                _statusLabel.Text = "There are no pending priority commands.";
+                _statusLabel.Text =
+                    "There are no pending priority commands.";
+
+                RefreshCommandList();
+
                 return;
             }
 
-            command.Status = "Processed";
+            _processPriorityButton.Enabled = false;
 
-            RefreshCommandList();
+            try
+            {
+                // Mark the simulated command as processed.
+                command.Status = "Processed";
+                command.ProcessedAt = DateTime.UtcNow;
+                command.WasSuccessful = true;
 
-            _statusLabel.Text =
-                $"Priority command #{command.Id} processed for {command.DeviceId}.";
+                // Preserve local history and undo functionality.
+                _commandHistoryService.RecordProcessedCommand(command);
+
+                // Record the processed command on the API server.
+                await _apiClient.RecordProcessedCommandAsync(command);
+
+                _statusLabel.Text =
+                    $"Priority command #{command.Id} processed and recorded for {command.DeviceId}.";
+            }
+            catch (Exception ex)
+            {
+                _statusLabel.Text =
+                    $"Priority command history could not be confirmed: {ex.Message}";
+
+                MessageBox.Show(
+                    "The priority command was processed locally, but the API " +
+                    "history could not be confirmed.\n\n" +
+                    ex.Message,
+                    "Command History Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            finally
+            {
+                RefreshCommandList();
+
+                _processPriorityButton.Enabled =
+                    _commandPriorityService.HasPendingCommands;
+            }
         }
+
+        // =========================================================
+        // UNDO LAST COMMAND
+        // =========================================================
 
         private void UndoButton_Click(object? sender, EventArgs e)
         {
@@ -405,7 +550,9 @@ namespace SmartX.Client.Forms
 
             if (command == null)
             {
-                _statusLabel.Text = "There are no commands available to undo.";
+                _statusLabel.Text =
+                    "There are no commands available to undo.";
+
                 return;
             }
 
@@ -416,6 +563,10 @@ namespace SmartX.Client.Forms
             _statusLabel.Text =
                 $"Command #{command.Id} has been undone.";
         }
+
+        // =========================================================
+        // REFRESH COMMAND LIST
+        // =========================================================
 
         private void RefreshCommandList()
         {
@@ -431,6 +582,7 @@ namespace SmartX.Client.Forms
             }
 
             int fifoCount = _commandQueueService.Count;
+
             int priorityCount = _commandPriorityService.Count;
 
             _queueCountLabel.Text =
@@ -442,9 +594,9 @@ namespace SmartX.Client.Forms
 
             _processPriorityButton.Enabled =
                 _commandPriorityService.HasPendingCommands;
-            _undoButton.Enabled = _commandHistoryService.CanUndo;
+
+            _undoButton.Enabled =
+                _commandHistoryService.CanUndo;
         }
-
-
     }
 }

@@ -831,49 +831,56 @@ namespace SmartX.Client.Forms
         }
 
         private void CheckForAlerts(
-            List<TelemetryRecord> records,
-            List<Sensor> sensors)
+     List<TelemetryRecord> records,
+     List<Sensor> sensors)
         {
-            bool hasAnomaly =
-                records.Any(r => r.IsAnomaly);
+            // Determine the latest reading for each device.
+            // Historical anomalies remain in the history but do not
+            // automatically mean the device is currently in an alert state.
+            List<TelemetryRecord> latestRecords = records
+                .GroupBy(
+                    record => record.DeviceId,
+                    StringComparer.OrdinalIgnoreCase)
+                .Select(group => group
+                    .OrderByDescending(record => record.Timestamp)
+                    .First())
+                .ToList();
 
-            bool hasDisconnectedSensor =
-                sensors.Any(s => !s.IsConnected);
+            bool hasCurrentAnomaly = latestRecords.Any(
+                record => record.IsAnomaly &&
+                          !record.IsDisconnected);
 
-            if (hasAnomaly &&
-                hasDisconnectedSensor)
+            bool hasDisconnectedSensor = sensors.Any(
+                sensor => !sensor.IsConnected);
+
+            if (hasCurrentAnomaly && hasDisconnectedSensor)
             {
                 _alertLabel.Text =
                     "⚠ ALERT: Abnormal telemetry detected | " +
                     "Sensor disconnected";
 
-                _alertLabel.ForeColor =
-                    Color.DarkRed;
+                _alertLabel.ForeColor = Color.DarkRed;
             }
-            else if (hasAnomaly)
+            else if (hasCurrentAnomaly)
             {
                 _alertLabel.Text =
                     "⚠ ALERT: Abnormal telemetry detected";
 
-                _alertLabel.ForeColor =
-                    Color.DarkRed;
+                _alertLabel.ForeColor = Color.DarkRed;
             }
             else if (hasDisconnectedSensor)
             {
                 _alertLabel.Text =
                     "⚠ ALERT: Sensor disconnected";
 
-                _alertLabel.ForeColor =
-                    Color.DarkOrange;
+                _alertLabel.ForeColor = Color.DarkOrange;
             }
             else
             {
                 _alertLabel.Text =
-                    "SYSTEM STATUS: " +
-                    "All telemetry readings normal";
+                    "SYSTEM STATUS: All telemetry readings normal";
 
-                _alertLabel.ForeColor =
-                    Color.DarkGreen;
+                _alertLabel.ForeColor = Color.DarkGreen;
             }
         }
 
