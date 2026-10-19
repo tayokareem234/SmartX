@@ -16,6 +16,8 @@ builder.Services.AddSingleton<EncryptedFileStorageService>();
 
 builder.Services.AddSingleton<TelemetryHistoryService>();
 
+builder.Services.AddSingleton<PredictiveSuggestionService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
